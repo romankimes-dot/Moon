@@ -10,6 +10,8 @@
 <meta name="theme-color" content="#04050a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
 <link rel="icon" href="icons/icon-192.png">
 <title>Moon Sweeper</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
@@ -70,7 +72,7 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; min-width: 0; }
 .chip.near { background: var(--accent); color: #1b1206; border-color: var(--accent); }
 .chip.goal { color: var(--cyan); text-transform: none; letter-spacing: .02em; font-weight: 600; }
-.chip.goal span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.goal { white-space: normal; line-height: 1.2; }
 .chip svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
 #mini { width: 88px; height: 88px; display: block; pointer-events: auto; cursor: pointer; border-radius: 8px; }
 .signal { padding: 4px 8px; display: grid; gap: 3px; justify-items: center; width: 88px; }
@@ -80,23 +82,18 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
 .bars i:nth-child(1) { height: 4px } .bars i:nth-child(2) { height: 7px } .bars i:nth-child(3) { height: 9px } .bars i:nth-child(4) { height: 12px } .bars i:nth-child(5) { height: 14px }
 .bars i.on { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
 .signal.hot .bars i.on { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
-.radio {
+.msgs {
   position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 204px);
-  padding: 8px 12px 9px; display: grid; gap: 2px; border-left: 3px solid var(--accent); pointer-events: none;
-  opacity: 0; transform: translateY(-8px); transition: opacity .3s, transform .3s; max-width: 420px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; z-index: 3;
 }
-.radio.on { opacity: 1; transform: none; }
+.radio { width: 100%; max-width: 420px; padding: 8px 12px 9px; display: grid; gap: 2px; border-left: 3px solid var(--accent); box-sizing: border-box; }
+.radio:not(.on), .toast:not(.on), .combo:not(.on) { display: none; }
 .radio b { font: 700 11px var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
 .radio span { font-size: 14px; line-height: 1.3; }
 .pop { position: fixed; transform: translate(-50%, -50%); font: 800 22px var(--display); color: var(--good); text-shadow: 0 2px 0 #000, 0 0 14px rgba(99,224,143,.6); pointer-events: none; animation: rise 1.3s ease-out forwards; white-space: nowrap; z-index: 3; }
 .pop.gold { color: var(--gold); text-shadow: 0 2px 0 #000, 0 0 14px rgba(255,197,66,.7); }
 @keyframes rise { to { transform: translate(-50%, -140%); opacity: 0; } }
-.combo {
-  position: fixed; left: 50%; top: 37%; transform: translateX(-50%);
-  font: 800 24px var(--display); letter-spacing: .06em; color: var(--gold); text-shadow: 0 0 16px rgba(255,197,66,.7), 0 2px 0 #000;
-  pointer-events: none; opacity: 0; transition: opacity .3s; white-space: nowrap;
-}
-.combo.on { opacity: 1; }
+.combo { font: 800 24px var(--display); letter-spacing: .06em; color: var(--gold); text-shadow: 0 0 16px rgba(255,197,66,.7), 0 2px 0 #000; white-space: nowrap; }
 .hint {
   position: fixed; left: 16px; right: 110px; bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); text-align: center; pointer-events: none;
   font: 700 19px var(--display); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 1px 8px #000; transition: opacity .6s;
@@ -109,6 +106,9 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
   transition: transform .08s, box-shadow .08s; pointer-events: auto;
 }
 .round.small { width: 40px; height: 40px; }
+.tools { display: flex; gap: 8px; }
+.tools svg { fill: currentColor; stroke: none; }
+#settings svg { fill: none; stroke: currentColor; }
 .round.small svg { width: 18px; height: 18px; }
 .round svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .round:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.18); }
@@ -190,6 +190,14 @@ h3 small { display: block; margin: 2px 0 0; }
 .about { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .about b { display: block; color: var(--accent); font: 700 15px var(--display); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
 .about p { margin: 0; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.badge { padding: 12px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.04); display: grid; gap: 3px; justify-items: center; text-align: center; min-width: 0; opacity: .55; }
+.badge i { font-style: normal; font-size: 30px; line-height: 1; color: var(--muted); }
+.badge b { font: 700 16px var(--display); letter-spacing: .03em; }
+.badge small { color: var(--muted); font-size: 12px; }
+.badge.got { opacity: 1; border-color: rgba(255,197,66,.6); background: rgba(255,197,66,.08); }
+.badge.got i { color: var(--gold); text-shadow: 0 0 12px rgba(255,197,66,.7); }
+.badge.got b { color: var(--gold); }
 .fact { padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(99,230,255,.3); background: rgba(99,230,255,.06); display: grid; gap: 4px; }
 .fact .label { color: var(--cyan); }
 .fact p { margin: 0; }
@@ -223,11 +231,10 @@ h3 small { display: block; margin: 2px 0 0; }
 .card .reward { font: 800 30px var(--display); color: var(--good); }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } }
 .toast {
-  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 230px); transform: translateX(-50%); max-width: calc(100vw - 32px); text-align: center;
+  max-width: 100%; text-align: center; box-sizing: border-box;
   background: var(--accent); color: #1b1206; font: 800 21px var(--display); letter-spacing: .06em; text-transform: uppercase;
-  padding: 6px 16px; border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .25s; z-index: 5; box-shadow: 0 0 30px rgba(255,138,42,.5);
+  padding: 6px 16px; border-radius: 8px; box-shadow: 0 0 30px rgba(255,138,42,.5);
 }
-.toast.on { opacity: 1; }
 .toast.gold { background: var(--gold); box-shadow: 0 0 30px rgba(255,197,66,.6); }
 .toast.bad { background: #ff5a5a; color: #fff; }
 .loading { position: fixed; inset: 0; display: grid; place-items: center; font: 800 28px var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); z-index: 7; background: var(--bg); }
@@ -258,11 +265,11 @@ h3 small { display: block; margin: 2px 0 0; }
   <div class="col right">
     <canvas id="mini" width="176" height="176" class="glass" aria-label="Carte de la Lune, toucher pour agrandir"></canvas>
     <div class="glass signal" id="signal"><span class="label">Détecteur</span><div class="bars"><i></i><i></i><i></i><i></i><i></i></div></div>
-    <button class="round small" id="settings" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <div class="tools"><button class="round small" id="openbadges" type="button" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></button>
+    <button class="round small" id="settings" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
   </div>
 </div>
-<div class="radio glass" id="radio"><b id="rname"></b><span id="rtxt"></span></div>
-<div class="combo" id="combo"></div>
+<div class="msgs"><div class="radio glass" id="radio"><b id="rname"></b><span id="rtxt"></span></div><div class="toast" id="toast" role="status"></div><div class="combo" id="combo"></div></div>
 <div class="hint" id="hint">Glisse le doigt pour avancer · pince pour zoomer</div>
 <div class="dock">
   <button class="btn act" id="act" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 14v6M4.5 10.5l5.6 1M19.5 10.5l-5.6 1"/></svg><span id="acttxt"></span><i class="hold"></i></button>
@@ -280,6 +287,13 @@ h3 small { display: block; margin: 2px 0 0; }
     <h3>Équipement <small>visible sur ton astronaute</small></h3><div class="list" id="gear"></div>
     <h3>Sacs</h3><div class="list" id="bags"></div>
     <h3 id="colh">Collection</h3><div class="finds" id="finds"></div>
+    <div class="sheet-bottom"><button class="close" type="button" data-close>Retour au chantier</button></div>
+  </div>
+</div>
+<div class="sheet" id="badgesheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-top"><h2 id="badgeh">Badges</h2><button class="close" type="button" data-close>Retour</button></div>
+    <div class="badges" id="badges"></div>
     <div class="sheet-bottom"><button class="close" type="button" data-close>Retour au chantier</button></div>
   </div>
 </div>
@@ -316,7 +330,6 @@ h3 small { display: block; margin: 2px 0 0; }
     <button class="btn primary" id="mok" type="button">Génial</button>
   </div>
 </div>
-<div class="toast" id="toast" role="status"></div>
 <div class="loading" id="loading">Alunissage…</div>
 
 <script>
@@ -403,6 +416,25 @@ h3 small { display: block; margin: 2px 0 0; }
     f.ring = ringOf(Math.round(f.x / CH), Math.round(f.z / CH));
     f.reward = Math.round(500 * RINGS[f.ring].mult * (1 + i * .2) / 50) * 50;
   });
+  // ===== Obstacles : bâtiments de la base (fixes) et objets découverts (ajoutés plus tard) =====
+  // cercle {x,z,r} ou rectangle {x,z,hw,hd} ; dust:false = le sol reste tel quel dessous
+  const OBST = [
+    { x: 0, z: 0, r: 4.9, pass: true },                       // plateforme : propre, mais on y marche
+    { x: -9, z: -9.5, r: 3.2 }, { x: -9, z: -6.4, hw: .8, hd: .9 },  // habitat et son sas
+    { x: -4.8, z: -7.7, r: 1 }, { x: -3.4, z: -7.7, r: 1 },   // réservoirs
+    { x: -14.2, z: -9.5, hw: 1.3, hd: 1.7 }, { x: -3.8, z: -9.5, hw: 1.3, hd: 1.7 },  // panneaux solaires
+    { x: 10, z: -10, hw: 4.1, hd: 3.1 }                       // garage
+  ];
+  const FIND_R = { eagle: 2.3, ufo: 2.1, lrv: 1.6, lunokhod: 1.4, cheese: 1, capsule: .9, reflector: .8, monolith: .8, flag: .5 };
+  const inObst = (o, x, z, pad = 0) => o.r != null ? Math.hypot(x - o.x, z - o.z) < o.r + pad : Math.abs(x - o.x) < o.hw + pad && Math.abs(z - o.z) < o.hd + pad;
+  // repousse un point hors des obstacles (rayon du mobile en plus)
+  function collide(P, rad) {
+    for (const o of OBST) {
+      if (o.pass || !inObst(o, P.x, P.z, rad)) continue;
+      if (o.r != null) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz) || 1e-6; P.x = o.x + dx / d * (o.r + rad); P.z = o.z + dz / d * (o.r + rad); }
+      else { const px = o.hw + rad - Math.abs(P.x - o.x), pz = o.hd + rad - Math.abs(P.z - o.z); if (px < pz) P.x += Math.sign(P.x - o.x || 1) * px; else P.z += Math.sign(P.z - o.z || 1) * pz; }
+    }
+  }
   // ===== Chapitres : chacun ouvre la région suivante =====
   const ST = window.STORY || { chapters: [], radio: [], facts: [], finds: {}, jokes: [], boss: { name: 'Base' } };
   const CHAPTERS = [
@@ -417,7 +449,7 @@ h3 small { display: block; margin: 2px 0 0; }
 
   // ===== Sauvegarde =====
   const KEY = 'moonsweeper7';
-  const fresh = () => ({ money: 0, dust: 0, hand: 'brosse', hands: ['brosse'], veh: {}, riding: null, bots: [], gear: [], bag: 0, found: [], mute: false, zen: false, zoom: 15, px: 0, pz: 7, ry: Math.PI, chapter: 0, ringOpen: 0, stats: { sold: 0, stars: 0 }, seen: 0, tuto: 0, intro: false });
+  const fresh = () => ({ money: 0, dust: 0, hand: 'brosse', hands: ['brosse'], veh: {}, riding: null, bots: [], gear: [], bag: 0, found: [], mute: false, zen: false, zoom: 15, px: 0, pz: 7, ry: Math.PI, chapter: 0, ringOpen: 0, stats: { sold: 0, stars: 0, nugs: 0, dist: 0, combo: 0 }, badges: [], seen: 0, tuto: 0, intro: false });
   let S = fresh();
   try { const j = JSON.parse(localStorage.getItem(KEY) || 'null'); if (j && j.hands) S = Object.assign(S, j); } catch (e) {}
   const lim = () => CH * (S.ringOpen + .5) - 1.5;       // limite de déplacement : la dernière région ouverte
@@ -582,6 +614,8 @@ h3 small { display: block; margin: 2px 0 0; }
       if (Math.hypot(x, z) > 9) c.nug.push({ x, z, i });
     }
     try { const s = localStorage.getItem(KEY + ':' + k); if (s) { const j = JSON.parse(s), bits = unb64(j.b); for (let i = 0; i < NC; i++) c.h[i] = bits[i >> 3] >> (i & 7) & 1; c.got = j.g || 0; c.done = !!j.d; } } catch (e) {}
+    if (c.ring === 0) { const ox = cx * CH - CH / 2, oz = cz * CH - CH / 2;
+      for (let i = 0; i < NC; i++) if (c.h[i]) { const wx = ox + ((i % CELLS) + .5) * CS, wz = oz + (Math.floor(i / CELLS) + .5) * CS; if (OBST.some(o => inObst(o, wx, wz, .3))) c.h[i] = 0; } }
     for (let i = 0; i < NC; i++) if (!c.h[i]) c.clean++;
     chunks.set(k, c); return c;
   }
@@ -684,7 +718,7 @@ h3 small { display: block; margin: 2px 0 0; }
   const MAT = {
     suit: P(0xdfe3ea, { clearcoat: .4, envMapIntensity: .7 }), suitGrey: P(0xa7acb8, { roughness: .45 }), grey: M(0x8d919b, { roughness: .6 }), dark: M(0x24272e, { roughness: .5 }), steel: M(0xb9bec8, { metalness: .85, roughness: .3 }),
     pink: P(0x2f7bff, { emissive: 0x06173a }), blue: P(0x2f7bff, { emissive: 0x06173a }), gold: P(0xf2b63a, { metalness: .7, roughness: .25, emissive: 0x3a2400 }), navy: P(0x1a2c55, { roughness: .4 }), orange: P(0xff7d1f, { roughness: .4 }), yellow: P(0xffc21f, { roughness: .4 }), bristle: M(0x7a4e26, { roughness: 1 }),
-    visor: P(0x0c1426, { metalness: .9, roughness: .06, clearcoat: 1, clearcoatRoughness: .05, emissive: 0x050a18 }), tire: M(0x1b1c20, { roughness: .9 }), rubber: M(0x2b2d33, { roughness: .8 }),
+    visor: P(0x030408, { metalness: 0, roughness: .1, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: .3 }), tire: M(0x1b1c20, { roughness: .9 }), rubber: M(0x2b2d33, { roughness: .8 }),
     white: P(0xeeeef1), glass: M(0x172233, { metalness: .6, roughness: .1, emissive: 0x0b2440 }),
     led: LIT(0x8ff6ff, 2.2), red: LIT(0xff5050, 2), beacon: LIT(0xffa040, 2.2),
     lampOn: LIT(0xfff6d0, 3), flame: new THREE.MeshBasicMaterial({ color: 0x8fe8ff, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })
@@ -1096,6 +1130,7 @@ h3 small { display: block; margin: 2px 0 0; }
   function placeFind(f, anim) {
     const g = findModel(f.id); g.position.set(f.x, H(f.x, f.z) - (anim ? 2.5 : 0), f.z); g.rotation.y += f.x; scene.add(g);
     const o = { g, f, t: anim ? 0 : 99 };
+    OBST.push({ x: f.x, z: f.z, r: FIND_R[f.id] || .6 });
     if (anim) {
       o.beam = new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, 60, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
       o.beam.position.set(f.x, 30, f.z); scene.add(o.beam);
@@ -1262,6 +1297,7 @@ h3 small { display: block; margin: 2px 0 0; }
   $('mute').addEventListener('click', () => { S.mute = !S.mute; audio(); muteUi(); saveSoon = true; });
   $('zen').addEventListener('click', () => { S.zen = !S.zen; muteUi(); saveSoon = true; toast(S.zen ? 'Mode zen' : 'Mode normal'); });
   function muteUi() { $('mutev').textContent = S.mute ? 'Coupé' : 'Activé'; $('mute').classList.toggle('on', !S.mute); $('zenv').textContent = S.zen ? 'Activé' : 'Désactivé'; $('zen').classList.toggle('on', S.zen); }
+  $('openbadges').addEventListener('click', () => { audio(); badgesUi(); $('badgesheet').hidden = false; });
   $('settings').addEventListener('click', () => { audio(); $('aboutboss').textContent = ST.boss.name; $('abouttxt').textContent = ST.boss.title || ''; $('settings-sheet').hidden = false; });
   document.addEventListener('click', e => { const b = e.target.closest('[data-close]'); if (b) b.closest('.sheet').hidden = true; });
   const bst = $('boost');
@@ -1306,7 +1342,7 @@ h3 small { display: block; margin: 2px 0 0; }
       const m = radioQ.shift(); if (!m) return; $('rname').textContent = m.who; $('rtxt').textContent = m.text; el.classList.add('on'); radioT = 4 + m.text.length * .045; }
   }
   function pop(text, kind) {
-    const v = player.position.clone().add(new THREE.Vector3(0, 2.2, 0)).project(camera), el = document.createElement('div');
+    const v = player.position.clone().add(new THREE.Vector3(1.6, .6, 1.2)).project(camera), el = document.createElement('div');
     el.className = 'pop' + (kind ? ' ' + kind : ''); el.textContent = text;
     el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px';
     document.body.appendChild(el); setTimeout(() => el.remove(), 1300);
@@ -1403,6 +1439,40 @@ h3 small { display: block; margin: 2px 0 0; }
     $('regions').innerHTML = RINGS.map((r, i) => `<span><b>${r.name}</b>${i > S.ringOpen ? 'fermée · chapitre ' + (i + 1) : 'poussière × ' + String(r.mult).replace('.', ',')}</span>`).join('');
     const f = ST.facts[Math.floor(Math.random() * ST.facts.length)]; if (f) { $('facttxt').textContent = f.text; $('factsrc').textContent = f.src; }
   }
+  // ===== Badges =====
+  const BADGES = [
+    { id: 'sale1',   name: 'Premier sac',        txt: 'Vendre son premier sac de poussière.', ok: () => S.stats.sold >= 1 },
+    { id: 'sale25',  name: 'Fournisseur agréé',  txt: 'Vendre 25 sacs.', ok: () => S.stats.sold >= 25 },
+    { id: 'sec1',    name: 'Coin propre',        txt: 'Terminer un secteur.', ok: () => sectorsAll() >= 1 },
+    { id: 'sec10',   name: 'Dix sur dix',        txt: 'Terminer 10 secteurs.', ok: () => sectorsAll() >= 10 },
+    { id: 'sec40',   name: 'Demi-Lune',          txt: 'Terminer 40 secteurs.', ok: () => sectorsAll() >= 40 },
+    { id: 'sec81',   name: 'Pleine Lune',        txt: 'Terminer les 81 secteurs.', ok: () => sectorsAll() >= 81 },
+    { id: 'hands',   name: 'Boîte à outils',     txt: 'Posséder tous les outils à main.', ok: () => S.hands.length >= HANDS.length },
+    { id: 'veh1',    name: 'Permis lunaire',     txt: 'Monter dans un engin.', ok: () => !!once.ride || !!S.riding },
+    { id: 'veh6',    name: 'Parc complet',       txt: 'Posséder les six engins.', ok: () => Object.keys(S.veh).length >= VEHS.length },
+    { id: 'find1',   name: 'Archéologue',        txt: 'Faire une première découverte.', ok: () => S.found.length >= 1 },
+    { id: 'find7',   name: 'Conservateur',       txt: 'Sept découvertes.', ok: () => S.found.length >= 7 },
+    { id: 'find14',  name: 'Musée lunaire',      txt: 'Les quatorze découvertes.', ok: () => S.found.length >= FINDS.length },
+    { id: 'combo3',  name: 'Lucky Luke',         txt: 'Atteindre un combo × 3.', ok: () => (S.stats.combo || 0) >= 2.99 },
+    { id: 'stars10', name: 'Cueilleur d’étoiles', txt: 'Ramasser 10 éclats d’étoiles filantes.', ok: () => S.stats.stars >= 10 },
+    { id: 'nugs100', name: 'Chercheur d’or',     txt: 'Ramasser 100 pépites.', ok: () => (S.stats.nugs || 0) >= 100 },
+    { id: 'km1',     name: 'Marathonien',        txt: 'Parcourir 1 km sur la Lune.', ok: () => (S.stats.dist || 0) >= 1000 },
+    { id: 'km10',    name: 'Lunokhod humain',    txt: 'Parcourir 10 km. Lunokhod 2 en a fait 39.', ok: () => (S.stats.dist || 0) >= 10000 },
+    { id: 'bots',    name: 'Chef d’équipe',      txt: 'Posséder toutes les machines autonomes.', ok: () => S.bots.length >= BOTS.length },
+    { id: 'ch3',     name: 'Pilote de surface',  txt: 'Terminer le chapitre 3.', ok: () => S.chapter >= 3 },
+    { id: 'ch6',     name: 'Employé du siècle',  txt: 'Terminer le dernier chapitre.', ok: () => S.chapter >= 6 },
+    { id: 'zen',     name: 'Respire',            txt: 'Activer le mode zen.', ok: () => !!S.zen },
+    { id: 'gold',    name: 'Tenue de gala',      txt: 'Recevoir la tenue dorée.', ok: () => S.gear.includes('gold') }
+  ];
+  const sectorsAll = () => { let n = 0; for (const c of chunks.values()) if (c.done) n++; return n; };
+  function checkBadges() {
+    if (!S.badges) S.badges = [];
+    for (const b of BADGES) if (!S.badges.includes(b.id) && b.ok()) { S.badges.push(b.id); toast('Badge · ' + b.name, 'gold'); sfx.buy(); saveSoon = true; }
+  }
+  function badgesUi() {
+    $('badgeh').textContent = `Badges · ${S.badges.length} / ${BADGES.length}`;
+    $('badges').innerHTML = BADGES.map(b => { const got = S.badges.includes(b.id); return `<div class="badge${got ? ' got' : ''}"><i>${got ? '★' : '☆'}</i><b>${b.name}</b><small>${b.txt}</small></div>`; }).join('');
+  }
   // ===== Chapitres =====
   const sectorsDone = ring => { let n = 0; for (const c of chunks.values()) if (c.done && c.ring === ring) n++; return n; };
   const allDone = () => { for (const c of chunks.values()) if (!c.done) return false; return true; };
@@ -1449,7 +1519,7 @@ h3 small { display: block; margin: 2px 0 0; }
   }
   fence();
   // ancienne sauvegarde : ouvrir les régions déjà entamées
-  if (S.chapter === 0 && S.ringOpen === 0) { for (const c of chunks.values()) if (c.clean > 0 && c.ring > S.ringOpen) S.ringOpen = c.ring; if (S.ringOpen) { S.chapter = S.ringOpen; fence(); } }
+  if (S.chapter === 0 && S.ringOpen === 0) { for (const c of chunks.values()) if (c.clean > 300 && c.ring > S.ringOpen) S.ringOpen = c.ring; if (S.ringOpen) { S.chapter = S.ringOpen; fence(); } }
   const mini = $('mini').getContext('2d');
   let last = {};
   const css = (k, el, p, v) => { if (last[k] !== v) { last[k] = v; el.style[p] = v; } };
@@ -1466,7 +1536,7 @@ h3 small { display: block; margin: 2px 0 0; }
     if (c) { set('secname', secName(c.cx, c.cz) + ' · ' + RINGS[c.ring].name); const p = c.clean / NC * 100; set('secpct', (c.done ? 100 : Math.floor(p)) + ' %'); css('secw', secI, 'width', (c.done ? 100 : p).toFixed(1) + '%');
       if (c.ring > 0 && !once['region:' + c.ring]) { once['region:' + c.ring] = 1; radio('region:' + c.ring); } }
     set('goaltxt', 'Ch. ' + Math.min(6, S.chapter + 1) + ' · ' + goalText());
-    checkChapter();
+    checkChapter(); checkBadges();
     const dx = BASE.x - player.position.x, dz = BASE.z - player.position.z, d = Math.hypot(dx, dz), near = d < PAD_R;
     set('basetxt', near ? 'À la base' : 'Base · ' + Math.round(d) + ' m');
     $('basechip').classList.toggle('near', near);
@@ -1562,10 +1632,12 @@ h3 small { display: block; margin: 2px 0 0; }
       // les engins avancent dans le sens où ils regardent
       const mx = riding ? Math.sin(player.rotation.y) : nx, mz = riding ? Math.cos(player.rotation.y) : nz, k = riding ? Math.max(0, Math.cos(dr)) * .7 + .3 : 1;
       P.x = clamp(P.x + mx * sp * k * dt, -lim(), lim()); P.z = clamp(P.z + mz * sp * k * dt, -lim(), lim());
-      moved = sp * k * dt;
+      moved = sp * k * dt; S.stats.dist = (S.stats.dist || 0) + moved;
       walk += dt * sp * 2;
       if (boostOn && Math.random() < .6) glowFx.add(P.x - mx * .8, P.y + .6, P.z - mz * .8, (Math.random() - .5), Math.random() * .6, (Math.random() - .5), .4, 0x63e6ff, 0);
     }
+    collide(P, riding ? t.w * .3 + .6 : .5);
+    for (const m of parked.values()) if (!inObst({ x: m.g.position.x, z: m.g.position.z, r: 0 }, P.x, P.z, 0)) { const o = { x: m.g.position.x, z: m.g.position.z, r: Math.max(1.2, m.def.w * .32) }; if (inObst(o, P.x, P.z, .4)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz) || 1e-6; P.x = o.x + dx / d * (o.r + .4); P.z = o.z + dz / d * (o.r + .4); } }
     const gy = H(P.x, P.z); P.y = gy;
     fwd.set(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y));
     if (rig.walk) {
@@ -1595,6 +1667,7 @@ h3 small { display: block; margin: 2px 0 0; }
     // combo
     comboT -= dt; if (comboT <= 0 && !S.zen) combo = Math.max(0, combo - dt * 250);
     if (comboMult() >= 2 && !once.combo) { once.combo = 1; radio('combo'); }
+    S.stats.combo = Math.max(S.stats.combo || 0, comboMult());
     const cm = comboMult(), ce = $('combo');
     if (cm >= 1.15) { ce.textContent = 'Combo × ' + cm.toFixed(1).replace('.', ','); ce.classList.add('on'); } else ce.classList.remove('on');
 
@@ -1608,7 +1681,7 @@ h3 small { display: block; margin: 2px 0 0; }
       if (!got && mag7 && dp < mag7) { n.x += (P.x - n.x) * Math.min(1, dt * 4); n.z += (P.z - n.z) * Math.min(1, dt * 4); if (dp < 1) got = true; }
       m.position.set(n.x - v.group.position.x, H(n.x, n.z) + .14 + Math.sin(time * 3 + n.i) * .06, n.z - v.group.position.z);
       if (got) {
-        const c = chunks.get(v.group.position.x / CH + ',' + v.group.position.z / CH); c.got |= 1 << n.i; c.sv = 1; m.parent.remove(m);
+        const c = chunks.get(v.group.position.x / CH + ',' + v.group.position.z / CH); c.got |= 1 << n.i; c.sv = 1; m.parent.remove(m); S.stats.nugs = (S.stats.nugs || 0) + 1;
         const val = Math.round(30 * RINGS[c.ring].mult * (1 + S.found.length * .1)); S.money += val;
         glowFx.burst(n.x, H(n.x, n.z) + .4, n.z, 26, 3, .9, [0xffc542, 0xffe9a0], 4); sfx.pop(); pop('+$' + val, 'gold');
       }
@@ -1662,6 +1735,7 @@ h3 small { display: block; margin: 2px 0 0; }
         let dr = Math.atan2(dx, dz) - g.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); g.rotation.y += dr * Math.min(1, dt * 5);
         if (Math.hypot(p.x - b.lx, p.z - b.lz) > .15) { collect(sweep(b.lx, b.lz, p.x, p.z, b.b.w / 2, false)); b.lx = p.x; b.lz = p.z; }
       }
+      if (!b.fly) collide(p, .6);
       p.y = H(p.x, p.z) + (b.fly ? 2.4 + Math.sin(time * 2 + b.n) * .25 : 0);
       for (const s of b.m.spin) s.o.rotation[s.ax] += dt * 14;
       if (b.fly && Math.random() < .3) dustFx.add(p.x + (Math.random() - .5), H(p.x, p.z) + .1, p.z + (Math.random() - .5), 0, 2.5, 0, .6, 0xb0aba2, -1);
