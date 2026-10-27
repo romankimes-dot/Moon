@@ -336,6 +336,9 @@ h3 small { display: block; margin: 2px 0 0; }
 (() => {
   if (!window.THREE) { document.getElementById('loading').textContent = 'Connexion requise'; return; }
   const $ = id => document.getElementById(id);
+  const handlers = {};
+  const on = (ev, fn) => { (handlers[ev] = handlers[ev] || []).push(fn); };
+  const emit = (ev, ...a) => { const l = handlers[ev]; if (l) for (const f of l) { try { f(...a); } catch (e) { console.error('[feature]', ev, e); } } };
   const fmt = n => Math.floor(n).toLocaleString('fr-FR');
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -1242,7 +1245,7 @@ h3 small { display: block; margin: 2px 0 0; }
     c.h.fill(0); c.clean = NC; c.done = true; c.sv = 1;
     const v = views.get(c.k); if (v && v.ctx) { v.ctx.clearRect(0, 0, TEXS, TEXS); v.dirty = true; }
     const bonus = Math.round(CH * CH * RINGS[c.ring].mult * .4);
-    S.money += bonus; toast(`Secteur ${secName(c.cx, c.cz)} propre · +$${fmt(bonus)}`, 'gold'); sfx.sector(); pop('+$' + fmt(bonus), 'gold'); radio('sector');
+    S.money += bonus; toast(`Secteur ${secName(c.cx, c.cz)} propre · +$${fmt(bonus)}`, 'gold'); sfx.sector(); pop('+$' + fmt(bonus), 'gold'); radio('sector'); emit('sector', c);
     const p = player.position; glowFx.burst(p.x, p.y + 1.5, p.z, 120, 7, 1.6, [0xff8a2a, 0xffc542, 0x63e6ff, 0xe2399f, 0x63e08f], 6);
     saveSoon = true;
   }
@@ -1316,10 +1319,10 @@ h3 small { display: block; margin: 2px 0 0; }
       const v = curVeh(), P = player.position, side = new THREE.Vector3(Math.cos(player.rotation.y), 0, -Math.sin(player.rotation.y));
       S.veh[v.id] = { x: P.x, z: P.z, ry: player.rotation.y }; S.riding = null;
       P.x = clamp(P.x - side.x * (v.w / 2 + 1.2), -lim(), lim()); P.z = clamp(P.z - side.z * (v.w / 2 + 1.2), -lim(), lim());
-      setRig(); syncParked(); toast('À pied');
+      setRig(); syncParked(); toast('À pied'); emit('dismount', v);
     } else if (nearVeh) {
       const p = S.veh[nearVeh.id]; player.position.set(p.x, 0, p.z); player.rotation.y = p.ry; S.riding = nearVeh.id;
-      syncParked(); setRig(); sfx.engine(); toast(nearVeh.name); if (!once.ride) { once.ride = 1; radio('vehicle'); }
+      syncParked(); setRig(); sfx.engine(); toast(nearVeh.name); if (!once.ride) { once.ride = 1; radio('vehicle'); } emit('ride', nearVeh);
     }
     lastTool = null; saveSoon = true; hud(true);
   }
@@ -1390,15 +1393,15 @@ h3 small { display: block; margin: 2px 0 0; }
     if (!owned && !b.dataset.sure) { b.dataset.sure = 1; const pr = b.querySelector('.p'); pr.dataset.old = pr.textContent; pr.textContent = 'Acheter ?'; b.classList.add('ask'); setTimeout(() => { if (b.dataset.sure) { delete b.dataset.sure; pr.textContent = pr.dataset.old; b.classList.remove('ask'); } }, 2500); return; }
     delete b.dataset.sure; b.classList.remove('ask');
     if (t === 'h') { const x = HANDS.find(y => y.id === id);
-      if (!S.hands.includes(id)) { if (S.money < x.price) return; S.money -= x.price; S.hands.push(id); sfx.buy(); toast(x.name); }
+      if (!S.hands.includes(id)) { if (S.money < x.price) return; S.money -= x.price; S.hands.push(id); sfx.buy(); toast(x.name); emit('buy', 'hand', x); }
       S.hand = id; if (!S.riding) setRig(); }
     if (t === 'v') { const x = VEHS.find(y => y.id === id);
-      if (!S.veh[id]) { if (S.money < x.price) return; S.money -= x.price; sfx.buy(); toast(x.name + ' livré'); radio('vehicle'); }
+      if (!S.veh[id]) { if (S.money < x.price) return; S.money -= x.price; sfx.buy(); toast(x.name + ' livré'); radio('vehicle'); emit('buy', 'veh', x); }
       else toast(x.name + ' arrive');
       deliver(x); $('garage').hidden = true; }
-    if (t === 'b') { const x = BOTS.find(y => y.id === id); if (S.money < x.price) return; S.money -= x.price; S.bots.push(id); syncBots(); sfx.buy(); toast(x.name); }
-    if (t === 'g') { const x = GEAR.find(y => y.id === id); if (S.money < x.price) return; S.money -= x.price; S.gear.push(id); sfx.buy(); toast(x.name); syncCargo(); setRig(); }
-    if (t === 's') { const i = +id; if (S.money < BAGS[i].price) return; S.money -= BAGS[i].price; S.bag = i; fullWarned = false; sfx.buy(); toast(BAGS[i].name); setRig(); }
+    if (t === 'b') { const x = BOTS.find(y => y.id === id); if (S.money < x.price) return; S.money -= x.price; S.bots.push(id); syncBots(); sfx.buy(); toast(x.name); emit('buy', 'bot', x); }
+    if (t === 'g') { const x = GEAR.find(y => y.id === id); if (S.money < x.price) return; S.money -= x.price; S.gear.push(id); sfx.buy(); toast(x.name); syncCargo(); setRig(); emit('buy', 'gear', x); }
+    if (t === 's') { const i = +id; if (S.money < BAGS[i].price) return; S.money -= BAGS[i].price; S.bag = i; fullWarned = false; sfx.buy(); toast(BAGS[i].name); setRig(); emit('buy', 'bag', BAGS[i]); }
     lastTool = null; saveSoon = true; shopUi(); hud(true);
   });
   $('open').addEventListener('click', () => { audio(); shopUi(); $('garage').hidden = false; });
@@ -1467,7 +1470,7 @@ h3 small { display: block; margin: 2px 0 0; }
   const sectorsAll = () => { let n = 0; for (const c of chunks.values()) if (c.done) n++; return n; };
   function checkBadges() {
     if (!S.badges) S.badges = [];
-    for (const b of BADGES) if (!S.badges.includes(b.id) && b.ok()) { S.badges.push(b.id); toast('Badge · ' + b.name, 'gold'); sfx.buy(); saveSoon = true; }
+    for (const b of BADGES) if (!S.badges.includes(b.id) && b.ok()) { S.badges.push(b.id); toast('Badge · ' + b.name, 'gold'); sfx.buy(); saveSoon = true; emit('badge', b); }
   }
   function badgesUi() {
     $('badgeh').textContent = `Badges · ${S.badges.length} / ${BADGES.length}`;
@@ -1499,7 +1502,7 @@ h3 small { display: block; margin: 2px 0 0; }
     const c = CHAPTERS[S.chapter]; if (!c) return;
     if (!c.goals.every(g => { const [a, b] = goalState(g); return a >= b; })) return;
     const gift = give(c.give);
-    S.chapter++; S.ringOpen = Math.min(4, S.chapter); fence(); sfx.find();
+    S.chapter++; S.ringOpen = Math.min(4, S.chapter); fence(); sfx.find(); emit('chapter', S.chapter);
     const next = CHAPTERS[S.chapter];
     modal(`${ST.boss.name} · fin du chapitre ${S.chapter}`, c.title, c.outro + (next ? '\n\n' + next.intro : ''), gift ? 'Reçu : ' + gift : (next && S.ringOpen < 5 ? 'Région ouverte : ' + RINGS[S.ringOpen].name : 'La Lune brille'), null, next ? 'En route' : 'Merci');
     glowFx.burst(player.position.x, player.position.y + 1.5, player.position.z, 160, 8, 2, [0xffc542, 0x63e6ff, 0xffffff], 5);
@@ -1681,7 +1684,7 @@ h3 small { display: block; margin: 2px 0 0; }
       if (!got && mag7 && dp < mag7) { n.x += (P.x - n.x) * Math.min(1, dt * 4); n.z += (P.z - n.z) * Math.min(1, dt * 4); if (dp < 1) got = true; }
       m.position.set(n.x - v.group.position.x, H(n.x, n.z) + .14 + Math.sin(time * 3 + n.i) * .06, n.z - v.group.position.z);
       if (got) {
-        const c = chunks.get(v.group.position.x / CH + ',' + v.group.position.z / CH); c.got |= 1 << n.i; c.sv = 1; m.parent.remove(m); S.stats.nugs = (S.stats.nugs || 0) + 1;
+        const c = chunks.get(v.group.position.x / CH + ',' + v.group.position.z / CH); c.got |= 1 << n.i; c.sv = 1; m.parent.remove(m); S.stats.nugs = (S.stats.nugs || 0) + 1; emit('nugget', c, n);
         const val = Math.round(30 * RINGS[c.ring].mult * (1 + S.found.length * .1)); S.money += val;
         glowFx.burst(n.x, H(n.x, n.z) + .4, n.z, 26, 3, .9, [0xffc542, 0xffe9a0], 4); sfx.pop(); pop('+$' + val, 'gold');
       }
@@ -1696,7 +1699,7 @@ h3 small { display: block; margin: 2px 0 0; }
     if (nf && nd < 4 + t.w / 2 && !paused) {
       let s = 0; for (let ox = -1; ox <= 1; ox++) for (let oz = -1; oz <= 1; oz++) s += dusty(nf.x + ox * .5, nf.z + oz * .5);
       if (s <= 2) {
-        S.found.push(nf.id); S.money += nf.reward; placeFind(nf, true); sfx.find(); saveSoon = true;
+        S.found.push(nf.id); S.money += nf.reward; placeFind(nf, true); sfx.find(); saveSoon = true; emit('find', nf);
         glowFx.burst(nf.x, H(nf.x, nf.z) + 1, nf.z, 160, 6, 2, [0xffc542, 0xffffff, 0xff8a2a], 3);
         modal(`Découverte ${S.found.length} / ${FINDS.length}`, nf.name, ST.finds[nf.id] || nf.txt, '+$' + fmt(nf.reward), thumb('f:' + nf.id, thumbFor('f:' + nf.id))); radio('find');
       }
@@ -1709,7 +1712,7 @@ h3 small { display: block; margin: 2px 0 0; }
 
     // vente à la base
     if (Math.hypot(P.x - BASE.x, P.z - BASE.z) < PAD_R + (riding ? t.w / 2 : 0) && S.dust >= 5) {
-      const v = Math.floor(S.dust); S.money += v; S.dust -= v; fullWarned = false; toast('Vendu · +$' + fmt(v)); sfx.cash(); pop('+$' + fmt(v)); if (v >= 25) S.stats.sold++;
+      const v = Math.floor(S.dust); S.money += v; S.dust -= v; fullWarned = false; toast('Vendu · +$' + fmt(v)); sfx.cash(); pop('+$' + fmt(v)); if (v >= 25) S.stats.sold++; emit('sell', v);
       if (v >= 25 && S.stats.sold % 3 === 1) radio('sell'); else if (S.stats.sold % 3 === 0 && ST.jokes.length) say('Blague du jour', ST.jokes[Math.floor(Math.random() * ST.jokes.length)]);
       glowFx.burst(P.x, P.y + 1.2, P.z, 40, 4, 1, [0x63e08f, 0xffc542], 5); saveSoon = true;
     }
@@ -1770,7 +1773,7 @@ h3 small { display: block; margin: 2px 0 0; }
     for (let i = rocks.length - 1; i >= 0; i--) {
       const k = rocks[i]; k.r.rotation.y += dt * 1.5; k.r.position.y = H(k.x, k.z) + .5 + Math.sin(time * 3) * .12;
       if (Math.hypot(k.x - P.x, k.z - P.z) < 1.4 + t.w * .4) {
-        scene.remove(k.r); rocks.splice(i, 1); S.money += k.val; S.stats.stars++; sfx.cash(); sfx.pop(); pop('Éclat d’étoile +$' + fmt(k.val), 'gold');
+        scene.remove(k.r); rocks.splice(i, 1); S.money += k.val; S.stats.stars++; sfx.cash(); sfx.pop(); pop('Éclat d’étoile +$' + fmt(k.val), 'gold'); emit('star', k.val);
         glowFx.burst(k.x, H(k.x, k.z) + .5, k.z, 50, 4, 1, [0xff7a1a, 0xffc542], 4);
       }
     }
@@ -1784,9 +1787,9 @@ h3 small { display: block; margin: 2px 0 0; }
     // caméra, ombres, ciel
     const DD = D + (riding ? t.w * .9 + 3 : 0); const want = new THREE.Vector3(P.x, gy + DD * .78, P.z + DD * .62);
     camPos.lerp(want, Math.min(1, dt * 5)); camLook.lerp(new THREE.Vector3(P.x, gy + .8, P.z), Math.min(1, dt * 8));
-    camera.position.copy(camPos);
+    if (MS.cam) MS.cam(camPos, camLook, dt); else camera.position.copy(camPos);
     if (shake > 0) { shake -= dt; camera.position.x += (Math.random() - .5) * shake * 1.2; camera.position.y += (Math.random() - .5) * shake; }
-    camera.lookAt(camLook);
+    if (!MS.cam) camera.lookAt(camLook);
     scene.fog.near = DD + 30; scene.fog.far = DD * 2.2 + 150;
     const ext = clamp(DD * 1.1, 18, 60);
     if (Math.abs(ext - shadowExt) > 2) { shadowExt = ext; Object.assign(sun.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext }); sun.shadow.camera.updateProjectionMatrix(); }
@@ -1802,9 +1805,51 @@ h3 small { display: block; margin: 2px 0 0; }
     tMini -= dt; if (tMini <= 0) { tMini = .4; drawMap(mini, 216, false); }
     tSave -= dt; if (tSave <= 0 || saveSoon) { tSave = 4; saveSoon = false; save(); }
 
-    if (composer) composer.render(); else renderer.render(scene, camera);
+    emit('frame', dt, { paused, mag, riding, boostOn, moved, time, P, tp, t });
+    if (!MS.noRender) { if (composer) composer.render(); else renderer.render(scene, camera); }
     requestAnimationFrame(frame);
   }
+  // ===== API pour les extensions : window.MS =====
+  // une extension est un fichier features/<nom>.js chargé après celui-ci ; il lit MS, s'abonne avec MS.on(...)
+  const MS = window.MS = {
+    on, emit, S, ST, THREE, scene, camera, renderer, get composer() { return composer; }, sun, sky, player, get rig() { return rig; }, get time() { return time; },
+    get D() { return D; }, set D(v) { D = clamp(v, 6, 80); }, get paused() { return !!document.querySelector('.sheet:not([hidden])') || !$('modal').hidden; },
+    get started() { return started; }, cam: null, noRender: false, get energy() { return energy; }, set energy(v) { energy = clamp(v, 0, 1); },
+    // monde
+    H, CH, CELLS, CS, G, RINGS, ringOf, inWorld, secName, lim, chunks, chunkAt, dusty, sweep, redirty, views, OBST, collide, inObst, BASE, PAD_R, fence,
+    FINDS, findObjs, placeFind, parked, bots, syncBots, syncParked, cargoDrone: () => cargoDrone, rocks, mulberry, clamp, fmt,
+    // catalogue et progression
+    HANDS, VEHS, BOTS, GEAR, BAGS, CHAPTERS, BADGES, checkBadges, badgesUi, checkChapter, goalState, sectorsAll, sectorsDone, give, has, bagCap, curTool, curVeh, curHand, setRig, collect, completeSector,
+    // 3D : matériaux et pièces
+    MAT, M, P, LIT, put, rod, box, rbox, cyl, sph, capsule, tex, glow, astronaut, vehicle, botModel, findModel, thumb, thumbFor, Particles, dustFx, glowFx, flash, envFor,
+    // interface
+    $, toast, modal, pop, say, radio, hud, shopUi, drawMap, mapUi, save, markSave: () => { saveSoon = true; }, sfx, tone, audio, get AC() { return AC; }, muteUi, once,
+    shake: v => { shake = Math.max(shake, v); },
+    // ajoute une feuille plein écran ; renvoie { el, body, open, close }
+    sheet(id, title) {
+      const el = document.createElement('div'); el.className = 'sheet'; el.id = id; el.hidden = true;
+      el.innerHTML = `<div class="sheet-in"><div class="sheet-top"><h2>${title}</h2><button class="close" type="button" data-close>Retour</button></div><div class="feat"></div><div class="sheet-bottom"><button class="close" type="button" data-close>Retour au chantier</button></div></div>`;
+      document.body.appendChild(el); sheets.push(el);
+      return { el, body: el.querySelector('.feat'), open() { audio(); el.hidden = false; }, close() { el.hidden = true; } };
+    },
+    // bouton rond dans la barre d'outils du HUD (svg : contenu d'un viewBox 24×24)
+    button(svg, label, fn) { const b = document.createElement('button'); b.className = 'round small'; b.type = 'button'; b.setAttribute('aria-label', label); b.innerHTML = `<svg viewBox="0 0 24 24">${svg}</svg>`; b.addEventListener('click', () => { audio(); fn(); }); document.querySelector('.tools').appendChild(b); return b; },
+    // interrupteur dans les réglages
+    toggle(label, sub, get, set) {
+      const b = document.createElement('button'); b.className = 'toggle'; b.type = 'button'; b.innerHTML = `<span>${label}${sub ? '<small>' + sub + '</small>' : ''}</span><b></b>`;
+      const ui = () => { b.querySelector('b').textContent = get() ? 'Activé' : 'Désactivé'; b.classList.toggle('on', !!get()); };
+      b.addEventListener('click', () => { set(!get()); ui(); saveSoon = true; }); ui(); $('reset').before(b); return b;
+    },
+    // puce dans le HUD (sous la base) ; renvoie l'élément
+    chip(text, cls) { const d = document.createElement('div'); d.className = 'glass chip ' + (cls || ''); d.textContent = text; document.querySelector('.chips').appendChild(d); return d; },
+    // jetons ⭐ (contrats, cosmétiques)
+    addTokens(n) { S.tokens = (S.tokens || 0) + n; pop('+' + n + ' ⭐', 'gold'); saveSoon = true; emit('tokens', S.tokens); },
+    // section dans le garage (après les sacs) ; renvoie le conteneur
+    shopSection(title, sub) { const h = document.createElement('h3'); h.innerHTML = title + (sub ? '<small>' + sub + '</small>' : ''); const d = document.createElement('div'); d.className = 'list'; $('colh').before(h, d); return d; },
+    itemHtml
+  };
+  if (S.tokens == null) S.tokens = 0;
+  emit('load');
   requestAnimationFrame(frame);
 })();
 </script>
