@@ -4,7 +4,7 @@
   S.sites ??= {}; S.craters ??= {};
   const n0 = scene.children.length;   // repère : tout ce que l'extension ajoute à la scène est marqué userData.relief
   const V3 = (x, y, z) => new THREE.Vector3(x, y, z), ring = (x, z) => ringOf(Math.round(x / CH), Math.round(z / CH));
-  const rockMat = M(0x8a867e, { roughness: 1, flatShading: true }), printMat = new THREE.MeshBasicMaterial({ color: 0x3a3630, transparent: true, opacity: .85, depthWrite: false });
+  const rockMat = M(0x8a867e, { roughness: 1, flatShading: true }), printMat = new THREE.MeshBasicMaterial({ color: 0x5a564f, transparent: true, opacity: .35, depthWrite: false });
 
   // ===== Poussière : nettoie les cases dont le centre passe `test`, et repeint la texture du secteur si elle existe =====
   function clearCells(x0, z0, x1, z1, test) {

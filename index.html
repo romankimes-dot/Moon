@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Moon Sweeper">
 <meta name="theme-color" content="#04050a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=cdfe08c0">
-<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png?v=cdfe08c0">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png?v=cdfe08c0">
-<link rel="icon" href="icons/icon-192.png?v=cdfe08c0">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=b73e19d6">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png?v=b73e19d6">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png?v=b73e19d6">
+<link rel="icon" href="icons/icon-192.png?v=b73e19d6">
 <title>Moon Sweeper</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -494,7 +494,7 @@ h3 small { display: block; margin: 2px 0 0; }
   // ===== Rendu =====
   const canvas = $('gl');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  const DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(DPR);
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .9;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -525,7 +525,9 @@ h3 small { display: block; margin: 2px 0 0; }
     try {
       const ext = renderer.extensions, flt = renderer.capabilities.isWebGL2 && (ext.has('EXT_color_buffer_float') || ext.has('EXT_color_buffer_half_float'));
       if (!flt) throw 0;   // sans rendu flottant, le bloom brûlerait tous les blancs : on s'en passe
-      composer = new THREE.EffectComposer(renderer, new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, format: THREE.RGBAFormat }));
+      const rt = THREE.WebGLMultisampleRenderTarget && ext.has('EXT_color_buffer_float') ? new THREE.WebGLMultisampleRenderTarget(256, 256, { type: THREE.HalfFloatType, format: THREE.RGBAFormat }) : new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, format: THREE.RGBAFormat });
+      if (rt.samples !== undefined) rt.samples = 4;
+      composer = new THREE.EffectComposer(renderer, rt);
       composer.addPass(new THREE.RenderPass(scene, camera));
       bloom = new THREE.UnrealBloomPass(new THREE.Vector2(256, 256), .9, .5, flt ? 1.15 : .97);
       composer.addPass(bloom);
@@ -1590,8 +1592,8 @@ h3 small { display: block; margin: 2px 0 0; }
     if (fps >= 45 || (Q === 2 && fps >= 30)) return;
     Q++;
     if (Q === 1) { sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } bloomDiv = 4; }
-    if (Q === 2) { PR = Math.min(DPR, 1.25); renderer.setPixelRatio(PR); if (composer) composer.setPixelRatio(PR); }
-    if (Q === 3) composer = null;
+    if (Q === 2) composer = null;                                                   // halo coupé : rendu direct, anticrénelage natif
+    if (Q === 3) { PR = Math.min(DPR, 1.5); renderer.setPixelRatio(PR); }
     resize();
   }
   addEventListener('resize', resize); resize();
