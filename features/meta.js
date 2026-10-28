@@ -141,7 +141,7 @@
   entry('Comment jouer', 'Gestes, base, garage, chapitres…', () => { $('settings-sheet').hidden = true; help.open(); }).id = 'meta-help-btn';
   const badges = $('badges');
   if (badges) {
-    const wrap = h('div', 'meta-sec'); wrap.id = 'meta-badge-share'; wrap.hidden = true; badges.after(wrap);
+    const wrap = h('div'); wrap.id = 'meta-badge-share'; wrap.hidden = true; badges.after(wrap);
     const b = btn('Partager mon score', () => { if (wrap.hidden) { wrap.innerHTML = ''; shareBox(wrap); wrap.hidden = false; } else wrap.hidden = true; }, true); b.classList.add('meta-go'); b.id = 'meta-badge-btn'; badges.after(b);
   }
 })();

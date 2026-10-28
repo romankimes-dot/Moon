@@ -19,8 +19,9 @@ body.photo .hud, body.photo .dock, body.photo .msgs, body.photo .joy, body.photo
 #photo .pbar .btn { flex: 1; max-width: 220px; padding: 14px; font: 800 18px var(--display); letter-spacing: .1em; text-transform: uppercase; }
 #photo .ptip { position: fixed; left: 16px; right: 16px; top: calc(env(safe-area-inset-top, 0px) + 16px); text-align: center; display: none; pointer-events: none; }
 #photo.live .ptip { display: block; }
+#photo .feat, #photo .shot, #photo .shot > *, #photo .ba { min-width: 0; max-width: 100%; }
 #photo .shot { display: grid; gap: 10px; }
-#photo .shot img { width: 100%; border-radius: 10px; display: block; }
+#photo .shot img { width: 100%; max-height: 60vh; object-fit: cover; border-radius: 10px; display: block; }
 #photo .band { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 14px; }
 #photo .band b { font: 800 20px var(--display); letter-spacing: .1em; text-transform: uppercase; }
 #photo .ba { display: grid; gap: 6px; }
@@ -29,7 +30,9 @@ body.photo .hud, body.photo .dock, body.photo .msgs, body.photo .joy, body.photo
 #photo .big { position: fixed; inset: 0; background: #000; z-index: 2; display: grid; grid-template-rows: 1fr auto; place-items: center; gap: 12px; padding: 16px; }
 #photo .big img { max-width: 100%; max-height: 100%; object-fit: contain; }
 #photo .big .btn { margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
-#photo .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }`;
+#photo .acts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+#photo .acts .btn { min-width: 0; padding: 12px 8px; font-size: 17px; white-space: nowrap; }
+.tools { flex-wrap: wrap; justify-content: flex-end; }`;
   document.head.appendChild(style);
 
   // ===== 1. Retours : vibration (Android) ou flash de bord + micro-secousse (iOS) =====
@@ -140,7 +143,7 @@ body.photo .hud, body.photo .dock, body.photo .msgs, body.photo .joy, body.photo
     const c = chunkAt(P.x, P.z), pct = c ? Math.round(c.clean / NC * 100) : 0, nom = c ? secName(c.cx, c.cz) : '—';
     ui.el.classList.remove('live'); document.body.classList.remove('photo'); if (MS.cam === orbCam) MS.cam = null;
     ui.body.innerHTML = `<div class="shot"><img alt="Capture du chantier"><div class="glass band"><b>Moon Sweeper</b><span>Secteur ${nom} · ${pct} % propre</span></div>
-      <div class="acts"><button class="btn primary" type="button" data-save>Enregistrer</button><button class="btn" type="button" data-again>Nouvelle photo</button></div>
+      <div class="acts"><button class="btn primary" type="button" data-save>Enregistrer</button><button class="btn" type="button" data-again>Autre photo</button></div>
       <h3>Avant / après <small>secteur ${nom}</small></h3><div class="ba"><canvas width="256" height="128"></canvas><div class="row"><span class="label">À l’arrivée</span><span class="label">Aujourd’hui · ${pct} %</span></div></div></div>`;
     ui.body.querySelector('img').src = url;
     if (c) beforeAfter(ui.body.querySelector('canvas'), c);

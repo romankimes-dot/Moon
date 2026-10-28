@@ -131,19 +131,19 @@
     zen: ['La fin contemplative', 'Tu as passé plus de temps à regarder la Terre qu’à viser la poussière, et pourtant la Lune brille. Pas d’étoiles filantes, pas de chronomètre : juste un balai, le silence, et une planète bleue qui se lève toutes les… jamais, en fait, elle ne bouge pas. Tu t’assieds sur le rebord d’un cratère. Le monolithe a cessé de bourdonner ; ou alors tu as cessé de l’écouter. Un petit pas pour toi, une grande sieste pour l’humanité.',
       ['Gilbert', 'Je ne comprends pas ta méthode, mais le Client est content, et Ramassoux pleure. De fierté. Over et out, et out encore.'],
       [MAELLE, 'Tu as fini en mode zen. Je l’ai noté dans ton dossier, rubrique « sagesse ». Le patron n’a pas cette rubrique.'],
-      [CLIENT, 'Le Client. De ma terrasse, je vous vois assis. Je m’assieds aussi. Nous sommes deux à ne rien faire. C’est parfait.']],
+      [CLIENT, 'De ma terrasse, je vous vois assis. Je m’assieds aussi. Nous sommes deux à ne rien faire. C’est parfait.']],
     museum: ['La fin du musée', 'Quatorze trouvailles, tous les badges, pas une poussière. La Lune est devenue le plus grand musée à ciel ouvert, sans ciel. Tu as redressé le drapeau, retrouvé la chaussette, rangé le rover et décodé le télé-achat. Les visiteurs arriveront dans quelques millénaires ; en attendant, le canard en plastique assure l’accueil. La plaque à l’entrée dit : « Nous sommes venus en paix. Et avec un balai. »',
       ['Gilbert', 'Un musée ! Ramassoux met son nom sur la plaque. En petit. Juste sous le tien. Bon, juste au-dessus.'],
       [MAELLE, 'Tout trouvé, tout gagné. Je n’ai plus rien à commenter. C’est frustrant. Fais-moi une faute, pour voir.'],
-      [CLIENT, 'Le Client. Je vois les vitrines depuis ma terrasse. J’ai commandé la visite guidée. Livraison dans deux ères.']],
+      [CLIENT, 'Je vois les vitrines depuis ma terrasse. J’ai commandé la visite guidée. Livraison dans deux ères.']],
     speed: ['La fin du speedrunner', 'Moins de trois heures. Les astronautes d’Apollo 11 sont restés deux heures et demie sur le sol lunaire ; toi, tu as nettoyé la Lune entière dans le même temps, ou presque. Le Client a cligné des yeux et a raté la moitié. Gilbert a oublié de lancer le chronomètre. Le monolithe, lui, a tout vu : il te propose un abonnement « livraison express ». Tu refuses, tu as déjà fini.',
       ['Gilbert', 'Terminé ?! Je n’avais même pas fini mon devis. Ramassoux est dépassé. Ramassoux est fier. Les deux.'],
       [MAELLE, 'Trois heures. Mon stage dure six mois. Je crois que je viens de comprendre le mot « stagiaire ».'],
-      [CLIENT, 'Le Client. J’ai détourné le regard pour saler mes cacahuètes et c’était fini. Remboursez-moi le suspense.']],
+      [CLIENT, 'J’ai détourné le regard pour saler mes cacahuètes et c’était fini. Remboursez-moi le suspense.']],
     model: ['La fin de l’employé modèle', 'Tu as balayé, vendu, acheté, recommencé. Pas de raccourci, pas de miracle : un sac après l’autre, comme on répare une aile de rover avec du scotch et des cartes plastifiées. La Lune brille, le Client lève les yeux, et quelque part un disjoncteur cassé est enclenché avec un feutre. Lunaclean SARL a une nouvelle devise : « On fait briller la Lune depuis six semaines. » Tu es l’employé du mois. Il n’y en a qu’un, mais quand même.',
       ['Gilbert', 'Employé du mois, du siècle, de l’ère. Je réimprime tes cartes de visite. En doré. Enfin, en jaune.'],
       [MAELLE, 'Tu as tout fait dans l’ordre. Le patron veut en faire une méthode. Je la nommerai « le balai ».'],
-      [CLIENT, 'Le Client. Depuis ma terrasse, elle est parfaite. Je vais la regarder tous les soirs. Puis commander Mars.']]
+      [CLIENT, 'Depuis ma terrasse, elle est parfaite. Je vais la regarder tous les soirs. Puis commander Mars.']]
   };
   const allBadges = () => BADGES.every(b => S.badges.includes(b.id) || b.ok());
   const endKey = () => S.stats.zenT > S.stats.play / 2 ? 'zen' : S.found.length >= FINDS.length && allBadges() ? 'museum' : S.stats.play < 3 * 3600 ? 'speed' : 'model';
@@ -222,7 +222,7 @@
     journalToday();
     const days = S.journal.slice().reverse().map((j, i) => `<div class="jour"><b>Jour ${S.journal.length - i} · ${frDate(j.d)}</b><p>${esc(j.txt)}</p></div>`);
     const clues = H.clues.slice().sort((a, b) => a - b).map(i => `<div class="jour ind"><b>Indice ${i + 1}/5 · ${CLUES[i][0]}</b><p>${esc(CLUES[i][1])}</p></div>`);
-    if (H.done) clues.push(`<div class="jour ind"><b>Résolu · ${esc(FINALE.slice(0, 0))}Galacto-Shop</b><p>Le monolithe est une antenne de télé-achat intergalactique. Tu étais la livraison. Badge « Enquêteur ».</p></div>`);
+    if (H.done) clues.push(`<div class="jour ind"><b>Résolu · Galacto-Shop</b><p>Le monolithe est une antenne de télé-achat intergalactique. Tu étais la livraison. Badge « Enquêteur ».</p></div>`);
     const ends = H.ends.map(k => `<div class="jour fin"><b>${ENDS[k][0]}</b><p>${esc(ENDS[k][1].split('. ')[0])}.</p></div>`);
     const facts = S.factsSeen.map(i => ST.facts[i]).filter(Boolean).map(f => `<div class="fact"><p>${esc(f.text)}</p><small>${esc(f.src)}</small></div>`);
     ui.body.innerHTML = sec('Jours', `${S.journal.length} ${S.journal.length > 1 ? 'jours' : 'jour'} sur la Lune`, days, 'Première page encore blanche.') +
@@ -244,7 +244,7 @@
     }
     const open = !modalEl.hidden;
     if (wasOpen && !open) mcool = .6; wasOpen = open;
-    if (mcool > 0) mcool -= dt; else if (!open && mq.length) modal(...mq.shift());
+    if (mcool > 0) mcool -= dt; else if (!f.paused && mq.length) modal(...mq.shift());   // jamais par-dessus une feuille
   });
 
   // ===== 5. Blagues et lignes radio supplémentaires =====
