@@ -647,10 +647,18 @@ h3 small { display: block; margin: 2px 0 0; }
     g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, TEXS, TEXS);
     if (c.done) return;
     g.save(); if ((c.cx + c.cz) & 1) { g.translate(TEXS, 0); g.scale(-1, 1); } if (c.cz & 1) { g.translate(0, TEXS); g.scale(1, -1); } g.drawImage(dustTiles[c.ring], 0, 0); g.restore();
-    g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000';
-    const s = TEXS / CELLS;
-    for (let y = 0; y < CELLS; y++) { let x = 0; while (x < CELLS) { if (c.h[y * CELLS + x]) { x++; continue; } let e = x; while (e < CELLS && !c.h[y * CELLS + e]) e++; g.fillRect(x * s, y * s, (e - x) * s, s); x = e; } }
+    // zones propres : masque d'une case par pixel, agrandi en lissage pour des bords doux (pas d'escalier)
+    const md = maskCtx.createImageData(CELLS, CELLS), px = md.data;
+    for (let i = 0; i < NC; i++) if (!c.h[i]) px[i * 4 + 3] = 255;
+    maskCtx.putImageData(md, 0, 0);
+    g.globalCompositeOperation = 'destination-out'; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    // un liseré plus sombre au bord, puis l'effacement (deux passes pour un bord net mais lisse)
+    g.globalCompositeOperation = 'source-atop'; g.globalAlpha = .35; g.filter = 'none';
+    g.drawImage(maskCv, -1, -1, TEXS + 2, TEXS + 2); g.globalAlpha = 1;
+    g.globalCompositeOperation = 'destination-out';
+    g.drawImage(maskCv, 0, 0, TEXS, TEXS); g.drawImage(maskCv, 0, 0, TEXS, TEXS);
   }
+  const maskCv = document.createElement('canvas'); maskCv.width = maskCv.height = CELLS; const maskCtx = maskCv.getContext('2d');
   function makeView(cx, cz) {
     const geo = new THREE.PlaneGeometry(CH, CH, 48, 48); geo.rotateX(-Math.PI / 2);
     const p = geo.attributes.position;
