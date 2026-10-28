@@ -2,7 +2,7 @@
 // et faune absurde (taupe lunaire, chat astronaute). Tout passe par MS ; zéro allocation par image dans 'frame'.
 (() => {
   const { S, on, THREE, scene, sun, sky, player, toast, pop, say, radio, fmt, sfx, tone, LIT, M, P, put, sph, cyl, box, glow, tex, glowFx, dustFx,
-    astronaut, collide, inObst, OBST, BASE, PAD_R, RINGS, chunkAt, H, lim, dusty, has, BADGES, toggle, chip, markSave, clamp, MAT, ST, CELLS } = MS;
+    astronaut, collide, inObst, OBST, BASE, PAD_R, RINGS, chunkAt, H, lim, dusty, has, BADGES, toggle, chip, markSave, clamp, MAT, ST, CELLS, capsule, rbox, rod } = MS;
   const JOUR = 20 * 60e3, NC = CELLS * CELLS, TAU = 6.2832;
   S.monde ??= { cycle: true, t0: Date.now() - 150e3, evT: 240 + Math.random() * 240, nuit: -1, taupe: 0, chat: 0 };
   const W = S.monde; if (W.cycle == null) W.cycle = true;
@@ -216,24 +216,56 @@
 
   // --- chat astronaute : assis sur la plateforme, se lève et miaule quand on passe ---
   const chat = new THREE.Group(); chat.position.set(2.7, .25, 2.5); chat.rotation.y = -2.2; scene.add(chat);
-  const corps = new THREE.Group(), tete = new THREE.Group(), queue = new THREE.Group(); chat.add(corps, tete, queue);
-  { const roux = M(0xc4601a, { roughness: .9, envMapIntensity: .4 }), clair = M(0xf0d0a8, { roughness: .9, envMapIntensity: .4 }), noir = M(0x101014), verre = P(0xbfe4ff, { transparent: true, opacity: .3, roughness: .05, clearcoat: 1 });
-    put(corps, sph(.22, 20, 14), roux, 0, .22, 0).scale.set(1, .85, 1.35); put(corps, sph(.14, 14, 10), clair, 0, .14, .22);
-    for (const s of [-1, 1]) put(corps, box(.09, .08, .14), roux, s * .1, .05, .25);
-    tete.position.set(0, .5, .2);
-    put(tete, sph(.17, 20, 14), roux, 0, 0, 0); put(tete, sph(.08, 12, 8), clair, 0, -.05, .14);
-    for (const s of [-1, 1]) { const o = put(tete, new THREE.ConeGeometry(.055, .13, 8), roux, s * .1, .16, 0); o.rotation.z = -s * .4; put(tete, sph(.03, 8, 6), LIT(0x66ff88, 2), s * .065, .03, .15); }
-    const casque = put(tete, sph(.27, 24, 16), verre, 0, 0, 0); casque.castShadow = false; put(tete, new THREE.TorusGeometry(.2, .03, 8, 24), MAT.suitGrey, 0, -.2, 0).rotation.x = Math.PI / 2;
-    queue.position.set(0, .18, -.28); const q = put(queue, new THREE.TorusGeometry(.2, .03, 8, 16, Math.PI), roux, 0, .1, 0); q.rotation.y = Math.PI / 2; }
-  const CH = { lev: 0, miaou: 0 };
+  const corps = new THREE.Group(), tete = new THREE.Group(), queue = [], pattes = []; chat.add(corps); corps.add(tete);
+  const paupieres = [], oreilles = [], coeurs = { t: 0 };
+  { const roux = P(0xe0742a, { roughness: .6, clearcoat: .3, envMapIntensity: .5 }), raye = P(0xb4531a, { roughness: .6, envMapIntensity: .5 }), clair = P(0xfbe6cc, { roughness: .6, envMapIntensity: .5 }),
+      rose = P(0xff9fb4, { roughness: .5 }), oeil = P(0x16181f, { roughness: .1, clearcoat: 1 }), blanc = LIT(0xffffff, 1.6),
+      verre = P(0xcfeaff, { transparent: true, opacity: .22, roughness: .02, clearcoat: 1, envMapIntensity: 1.2 }), suit = MAT.suit, bleu = MAT.blue;
+    // corps : capsule assise + petite combinaison
+    const c = put(corps, capsule(.17, .18, 24), roux, 0, .25, 0); c.rotation.x = .35;
+    put(corps, sph(.15, 20, 14), clair, 0, .24, .1).scale.set(.85, 1.05, .6);
+    put(corps, new THREE.TorusGeometry(.17, .03, 10, 28), bleu, 0, .44, 0).rotation.x = Math.PI / 2 - .35;
+    put(corps, rbox(.2, .2, .1, .04), suit, 0, .3, -.18);
+    for (const s of [-1, 1]) for (const z of [.12, -.08]) { const pa = new THREE.Group(); pa.position.set(s * .1, .1, z); corps.add(pa); put(pa, capsule(.05, .08, 12), z > 0 ? clair : roux, 0, -.04, 0); put(pa, sph(.055, 12, 8), clair, 0, -.1, .02).scale.set(1, .6, 1.2); pattes.push(pa); }
+    // tête : ronde, joues, museau, grands yeux brillants
+    tete.position.set(0, .56, .1);
+    put(tete, sph(.19, 28, 20), roux, 0, 0, 0).scale.set(1.08, .95, 1);
+    for (const s of [-1, 1]) { put(tete, sph(.09, 16, 12), clair, s * .08, -.07, .11); put(tete, rbox(.05, .012, .1, .005), raye, s * .09, .14, -.03).rotation.z = s * .3; }
+    put(tete, rbox(.03, .012, .12, .005), raye, 0, .17, -.02);
+    put(tete, sph(.025, 12, 8), rose, 0, -.03, .19).scale.set(1.3, .8, 1);
+    for (const s of [-1, 1]) {
+      const o = new THREE.Group(); o.position.set(s * .11, .14, -.01); o.rotation.z = -s * .35; tete.add(o); oreilles.push(o);
+      put(o, new THREE.ConeGeometry(.07, .14, 16), roux, 0, .05, 0); put(o, new THREE.ConeGeometry(.04, .09, 12), rose, 0, .04, .025);
+      put(tete, sph(.045, 16, 12), oeil, s * .072, .02, .155).scale.set(1, 1.15, .6);
+      put(tete, sph(.013, 8, 6), blanc, s * .072 - .012, .04, .18);
+      const pp = put(tete, sph(.048, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), roux, s * .072, .02, .152); pp.scale.set(1.02, 1.2, .65); pp.visible = false; paupieres.push(pp);
+      for (const k of [-1, 1]) rod(tete, new THREE.Vector3(s * .06, -.06 + k * .012, .17), new THREE.Vector3(s * .2, -.05 + k * .03, .15), .003, MAT.white);
+    }
+    const casque = put(tete, sph(.3, 32, 24), verre, 0, .02, 0); casque.castShadow = false;
+    put(tete, new THREE.TorusGeometry(.22, .035, 12, 32), MAT.suitGrey, 0, -.2, 0).rotation.x = Math.PI / 2;
+    put(tete, sph(.03, 10, 8), LIT(0x63e6ff, 2.4), 0, .33, 0); rod(tete, new THREE.Vector3(0, .28, 0), new THREE.Vector3(0, .33, 0), .008, MAT.steel);
+    // queue : chaîne de boules rayées qui ondule
+    let par = corps; const q0 = new THREE.Group(); q0.position.set(0, .14, -.2); q0.rotation.x = -.9; corps.add(q0); par = q0;
+    for (let k = 0; k < 7; k++) { const seg = new THREE.Group(); seg.position.set(0, k ? .06 : 0, k ? -.02 : 0); par.add(seg); put(seg, sph(.04 - k * .002, 12, 8), k % 2 ? raye : roux); queue.push(seg); par = seg; }
+  }
+  const CH = { lev: 0, miaou: 0, cligne: 2, oreille: 3, ronron: 0 };
   function chatTick(dt, f) {
-    const dx = f.P.x - chat.position.x, dz = f.P.z - chat.position.z, d = Math.hypot(dx, dz), pres = d < 2;
-    CH.lev += ((pres ? 1 : 0) - CH.lev) * Math.min(1, dt * 6);
-    corps.position.y = CH.lev * .12; corps.scale.y = 1 + CH.lev * .25; tete.position.y = .5 + CH.lev * .22; queue.position.y = .18 + CH.lev * .2;
-    queue.rotation.z = Math.sin(f.time * (pres ? 9 : 2)) * (.25 + CH.lev * .5);
-    if (d < 7) chat.rotation.y += (((Math.atan2(dx, dz) - chat.rotation.y + Math.PI) % TAU + TAU) % TAU - Math.PI) * Math.min(1, dt * 3);
+    const dx = f.P.x - chat.position.x, dz = f.P.z - chat.position.z, d = Math.hypot(dx, dz), pres = d < 2.2, t = f.time;
+    CH.lev += ((pres ? 1 : 0) - CH.lev) * Math.min(1, dt * 5);
+    // respiration, assis → debout, tête qui suit le joueur
+    corps.position.y = CH.lev * .08; corps.scale.set(1, 1 + Math.sin(t * 2.2) * .02 + CH.lev * .08, 1);
+    tete.rotation.z = Math.sin(t * .7) * .08 * (1 - CH.lev) + Math.sin(t * 6) * .05 * CH.lev; tete.rotation.x = -.15 * CH.lev;
+    for (let i = 0; i < pattes.length; i++) pattes[i].rotation.x = CH.lev * Math.sin(t * 8 + i * 1.6) * .25;
+    // queue : vague douce, rapide quand il est content
+    for (let k = 0; k < queue.length; k++) { queue[k].rotation.x = -.16 + Math.sin(t * (pres ? 5 : 1.6) - k * .6) * .06; queue[k].rotation.z = Math.sin(t * (pres ? 6 : 1.2) - k * .5) * (.15 + CH.lev * .2); }
+    // clignement et oreille qui frémit
+    CH.cligne -= dt; const ferme = CH.cligne < .12; for (const p of paupieres) p.visible = ferme; if (CH.cligne < 0) CH.cligne = 2 + Math.random() * 3;
+    CH.oreille -= dt; oreilles[0].rotation.x = CH.oreille < .25 ? Math.sin(CH.oreille * 60) * .3 : 0; if (CH.oreille < 0) CH.oreille = 3 + Math.random() * 5;
+    if (d < 8) chat.rotation.y += (((Math.atan2(dx, dz) - chat.rotation.y + Math.PI) % TAU + TAU) % TAU - Math.PI) * Math.min(1, dt * 3);
+    // près de lui : petits cœurs et ronronnement
+    if (pres) { coeurs.t -= dt; if (coeurs.t <= 0) { coeurs.t = .5; MS.glowFx.add(chat.position.x + (Math.random() - .5) * .3, .9, chat.position.z + (Math.random() - .5) * .3, 0, .8, 0, 1.2, 0xff6fa0, -.3); } }
     CH.miaou -= dt;
-    if (pres && CH.miaou <= 0) { CH.miaou = 4; tone(900, .12, 'sine', .08, 1400); setTimeout(() => tone(1300, .2, 'sine', .07, 700), 120);
+    if (pres && CH.miaou <= 0) { CH.miaou = 5; tone(900, .12, 'sine', .08, 1400); setTimeout(() => tone(1300, .2, 'sine', .07, 700), 120); setTimeout(() => tone(55, .9, 'sine', .05, 50), 400);
       if (!W.chat) { W.chat = 1; markSave(); toast('Miaou. (Le chat t’aime bien.)'); } }
   }
   BADGES.push({ id: 'taupe', name: 'Taupe repérée', txt: 'Voir une taupe lunaire sortir de la poussière.', ok: () => !!W.taupe },
@@ -253,7 +285,7 @@
     if (nom === 'pluieTout') { while (PL.i < PL.n) { PL.next = 0; pluie(0); } for (const e of ECL) if (e.on) e.t = 1.7; }
     if (nom === 'fin') { if (EV.nom) finEv(); }
     if (nom === 'taupe') { taupeSpawn(); TP.t = .6; MS.cam = () => { MS.camera.position.set(TP.x + 1.6, TP.y + 1.6, TP.z + 2.4); MS.camera.lookAt(TP.x, TP.y + .3, TP.z); }; }
-    if (nom === 'chat') { player.position.set(chat.position.x + 1.2, 0, chat.position.z + .8); MS.cam = (cp) => { MS.camera.position.set(chat.position.x - 1.5, 2.2, chat.position.z + 3); MS.camera.lookAt(chat.position.x, .5, chat.position.z); }; }
+    if (nom === 'chat') { player.position.set(chat.position.x - 1.3, 0, chat.position.z - .6); MS.cam = (cp) => { MS.camera.position.set(chat.position.x + 1.6, 1.4, chat.position.z + 1.6); MS.camera.lookAt(chat.position.x, .5, chat.position.z); }; }
     if (nom === 'ciel') MS.cam = (cp, cl) => { MS.camera.position.copy(cp); MS.camera.position.y += 1; MS.camera.lookAt(cp.x + SOL.x * 50, cp.y + SOL.y * 50, cp.z + SOL.z * 50); };
     if (nom === 'sol') MS.cam = null;
     return { phase: phase(), jour, envK, chat: [chat.visible, chat.children.length], ecl, ev: EV.nom, t: EV.t, touriste: TR.on ? [TR.x, TR.z] : null, eclats: ECL.filter(e => e.on).length, taupe: TP.on, lampe: lamp.intensity };

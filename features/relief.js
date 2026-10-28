@@ -162,11 +162,30 @@
   }
 
   // ===== Traces : empreintes (à pied) et sillons (en engin), instances recyclées, effacées après 60 s =====
-  const FOOT = 200, RUT = 400, LIFE = 60, ZERO = new THREE.Matrix4().makeScale(0, 0, 0), m4 = new THREE.Matrix4();
-  const mkTrail = (geo, n) => { const m = new THREE.InstancedMesh(geo, printMat, n); m.frustumCulled = false; m.renderOrder = 2; for (let i = 0; i < n; i++) m.setMatrixAt(i, ZERO); scene.add(m); return { m, born: new Float32Array(n).fill(-1e9), i: 0, d: 0, side: 1 }; };
+  // chaque trace a sa propre opacité (attribut d'instance) : visible 25 s, puis fondu très doux jusqu'à 60 s
+  const FOOT = 200, RUT = 400, LIFE = 60, FADE0 = 25, ZERO = new THREE.Matrix4().makeScale(0, 0, 0), m4 = new THREE.Matrix4();
+  const trailMat = new THREE.MeshBasicMaterial({ color: 0x5a564f, transparent: true, opacity: .4, depthWrite: false });
+  trailMat.onBeforeCompile = sh => {
+    sh.vertexShader = 'attribute float aAlpha;\nvarying float vAlpha;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvAlpha = aAlpha;');
+    sh.fragmentShader = 'varying float vAlpha;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\ngl_FragColor.a *= vAlpha;');
+  };
+  const mkTrail = (geo, n) => {
+    const a = new THREE.InstancedBufferAttribute(new Float32Array(n), 1); a.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('aAlpha', a);
+    const m = new THREE.InstancedMesh(geo, trailMat, n); m.frustumCulled = false; m.renderOrder = 2; for (let i = 0; i < n; i++) m.setMatrixAt(i, ZERO); scene.add(m);
+    return { m, a, born: new Float32Array(n).fill(-1e9), i: 0, d: 0, side: 1 };
+  };
   const foot = mkTrail(new THREE.BoxGeometry(.13, .012, .3), FOOT), rut = mkTrail(new THREE.BoxGeometry(.14, .012, .8), RUT);
-  function stamp(tr, x, z, ry, time) { m4.makeRotationY(ry); m4.setPosition(x, H(x, z) + .03, z); tr.m.setMatrixAt(tr.i, m4); tr.born[tr.i] = time; tr.i = (tr.i + 1) % tr.born.length; tr.m.instanceMatrix.needsUpdate = true; }
-  function expire(tr, time) { const b = tr.born; let u = false; for (let i = 0; i < b.length; i++) if (b[i] > -1e8 && time - b[i] > LIFE) { b[i] = -1e9; tr.m.setMatrixAt(i, ZERO); u = true; } if (u) tr.m.instanceMatrix.needsUpdate = true; }
+  function stamp(tr, x, z, ry, time) { m4.makeRotationY(ry); m4.setPosition(x, H(x, z) + .03, z); tr.m.setMatrixAt(tr.i, m4); tr.a.array[tr.i] = 1; tr.a.needsUpdate = true; tr.born[tr.i] = time; tr.i = (tr.i + 1) % tr.born.length; tr.m.instanceMatrix.needsUpdate = true; }
+  function expire(tr, time) {
+    const b = tr.born, al = tr.a.array; let u = false, ua = false;
+    for (let i = 0; i < b.length; i++) {
+      if (b[i] < -1e8) continue;
+      const age = time - b[i];
+      if (age > LIFE) { b[i] = -1e9; tr.m.setMatrixAt(i, ZERO); al[i] = 0; u = ua = true; }
+      else if (age > FADE0) { const k = 1 - (age - FADE0) / (LIFE - FADE0), v = k * k * (3 - 2 * k); if (Math.abs(al[i] - v) > .02) { al[i] = v; ua = true; } }
+    }
+    if (u) tr.m.instanceMatrix.needsUpdate = true; if (ua) tr.a.needsUpdate = true;
+  }
 
   // construction : tout de suite (MS est complet quand l'extension se charge) ; « load » reste là si l'ordre de chargement change
   let built = false; const build = () => { if (built) return; built = true; buildSites(); buildCrevasses(); buildDunes(); buildCraters(); for (let i = n0; i < scene.children.length; i++) scene.children[i].userData.relief = 1; };

@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Moon Sweeper">
 <meta name="theme-color" content="#04050a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=b73e19d6">
-<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png?v=b73e19d6">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png?v=b73e19d6">
-<link rel="icon" href="icons/icon-192.png?v=b73e19d6">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=58bcd906">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png?v=58bcd906">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png?v=58bcd906">
+<link rel="icon" href="icons/icon-192.png?v=58bcd906">
 <title>Moon Sweeper</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -95,7 +95,7 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
 @keyframes rise { to { transform: translate(-50%, -140%); opacity: 0; } }
 .combo { font: 800 24px var(--display); letter-spacing: .06em; color: var(--gold); text-shadow: 0 0 16px rgba(255,197,66,.7), 0 2px 0 #000; white-space: nowrap; }
 .hint {
-  position: fixed; left: 16px; right: 110px; bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); text-align: center; pointer-events: none;
+  position: fixed; left: 100px; right: 100px; bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); text-align: center; pointer-events: none;
   font: 700 19px var(--display); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 1px 8px #000; transition: opacity .6s;
 }
 .hint.off { opacity: 0; }
@@ -122,6 +122,10 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
   position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
   display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
 }
+#boost { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); }
+/* mode gaucher : garage et bouton contextuel à gauche, boost à droite */
+body.gaucher .dock { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); align-items: flex-start; }
+body.gaucher #boost { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
 .btn {
   display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 14px; padding: 13px 20px; cursor: pointer;
   font: 800 22px var(--display); letter-spacing: .08em; text-transform: uppercase; transition: transform .08s, box-shadow .08s;
@@ -281,8 +285,8 @@ h3 small { display: block; margin: 2px 0 0; }
 <div class="dock">
   <button class="btn act" id="act" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 14v6M4.5 10.5l5.6 1M19.5 10.5l-5.6 1"/></svg><span id="acttxt"></span><i class="hold"></i></button>
   <button class="btn primary" id="open" type="button"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Garage</span></button>
-  <button class="boost" id="boost" type="button" aria-label="Boost"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><span>Boost</span></button>
 </div>
+<button class="boost" id="boost" type="button" aria-label="Boost"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><span>Boost</span></button>
 <div class="joy" id="joy"><i id="knob"></i></div>
 
 <div class="sheet" id="garage" hidden>
@@ -308,6 +312,7 @@ h3 small { display: block; margin: 2px 0 0; }
   <div class="sheet-in">
     <div class="sheet-top"><h2>Réglages</h2><button class="close" type="button" data-close>Retour</button></div>
     <button class="toggle" id="mute" type="button"><span>Son</span><b id="mutev">Activé</b></button>
+    <button class="toggle" id="gaucher" type="button"><span>Mode gaucher<small>Garage à gauche, boost à droite.</small></span><b id="gaucherv">Désactivé</b></button>
     <button class="toggle" id="zen" type="button"><span>Mode zen<small>Pas d’étoiles filantes, le combo ne retombe jamais.</small></span><b id="zenv">Désactivé</b></button>
     <div class="about"><b id="aboutboss"></b><p id="abouttxt"></p></div>
     <button class="reset" id="reset" type="button">Recommencer la partie</button>
@@ -625,13 +630,48 @@ h3 small { display: block; margin: 2px 0 0; }
       const x = cx * CH + (r() - .5) * (CH - 2), z = cz * CH + (r() - .5) * (CH - 2);
       if (Math.hypot(x, z) > 9) c.nug.push({ x, z, i });
     }
-    try { const s = localStorage.getItem(KEY + ':' + k); if (s) { const j = JSON.parse(s), bits = unb64(j.b); for (let i = 0; i < NC; i++) c.h[i] = bits[i >> 3] >> (i & 7) & 1; c.got = j.g || 0; c.done = !!j.d; } } catch (e) {}
+    try { const s = localStorage.getItem(KEY + ':' + k); if (s) applyRec(c, JSON.parse(s)); } catch (e) {}
     if (c.ring === 0) { const ox = cx * CH - CH / 2, oz = cz * CH - CH / 2;
       for (let i = 0; i < NC; i++) if (c.h[i]) { const wx = ox + ((i % CELLS) + .5) * CS, wz = oz + (Math.floor(i / CELLS) + .5) * CS; if (OBST.some(o => inObst(o, wx, wz, .3))) c.h[i] = 0; } }
     for (let i = 0; i < NC; i++) if (!c.h[i]) c.clean++;
     chunks.set(k, c); return c;
   }
-  function pack(h) { const b = new Uint8Array(NC / 8); for (let i = 0; i < NC; i++) if (h[i]) b[i >> 3] |= 1 << (i & 7); return b64(b); }
+  // ===== Stockage des secteurs : longueurs de plages (varint) en base64, ~20 fois plus court que le bit à bit =====
+  function pack(h) {
+    const out = [h[0]]; let i = 0;
+    while (i < NC) { const v = h[i]; let n = 0; while (i < NC && h[i] === v) { i++; n++; } while (n >= 128) { out.push(n & 127 | 128); n >>= 7; } out.push(n); }
+    return b64(Uint8Array.from(out));
+  }
+  function unpack(str, h) {
+    const a = unb64(str); let v = a[0], i = 0, p = 1;
+    while (p < a.length && i < NC) { let n = 0, sh = 0, b; do { b = a[p++]; n |= (b & 127) << sh; sh += 7; } while (b & 128); h.fill(v, i, Math.min(NC, i + n)); i += n; v = v ? 0 : 1; }
+  }
+  // un enregistrement : { r: plages } (nouveau) ou { b: bits } (ancien), plus pépites, secteur fini, date
+  function applyRec(c, j) {
+    if (j.r) unpack(j.r, c.h); else if (j.b) { const bits = unb64(j.b); for (let i = 0; i < NC; i++) c.h[i] = bits[i >> 3] >> (i & 7) & 1; }
+    c.got = j.g || 0; c.done = !!j.d; c.t = j.t || 0;
+  }
+  const rec = c => ({ r: pack(c.h), g: c.got, d: c.done ? 1 : 0, t: c.t = Date.now() });
+  // copie de secours dans IndexedDB (quota séparé, survit si localStorage est plein ou vidé)
+  let idb = null;
+  try { const rq = indexedDB.open('moonsweeper', 1); rq.onupgradeneeded = () => rq.result.createObjectStore('chunks'); rq.onsuccess = () => { idb = rq.result; restoreIdb(); }; } catch (e) {}
+  function idbPut(list) { if (!idb || !list.length) return; try { const tx = idb.transaction('chunks', 'readwrite'), st = tx.objectStore('chunks'); for (const [k, v] of list) st.put(v, k); } catch (e) {} }
+  // au démarrage : un secteur plus récent dans IndexedDB que dans localStorage est repris (et réaffiché)
+  function restoreIdb() {
+    try { const tx = idb.transaction('chunks', 'readonly'), rq = tx.objectStore('chunks').openCursor(); let fixed = 0;
+      rq.onsuccess = () => { const cur = rq.result; if (!cur) { if (fixed) { saveSoon = true; hud(true); } return; }
+        // fusion : une case propre dans l'une des deux copies reste propre (le nettoyage ne se perd jamais)
+        const c = chunks.get(cur.key), v = cur.value;
+        if (c && v && (v.r || v.b)) {
+          const tmp = { h: new Uint8Array(NC).fill(1), got: 0, done: false }; applyRec(tmp, v);
+          let ch = 0; for (let i = 0; i < NC; i++) if (!tmp.h[i] && c.h[i]) { c.h[i] = 0; ch++; }
+          if ((tmp.got | c.got) !== c.got) { c.got |= tmp.got; ch++; }
+          if (tmp.done && !c.done) { c.done = true; c.h.fill(0); ch++; }
+          if (ch) { c.clean = 0; for (let i = 0; i < NC; i++) if (!c.h[i]) c.clean++; c.sv = 1; fixed++; const w = views.get(c.k); if (w && w.ctx) { paintView(c, w.ctx); w.dirty = true; } }
+        }
+        cur.continue(); };
+    } catch (e) {} }
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   for (let cx = -G; cx <= G; cx++) for (let cz = -G; cz <= G; cz++) chunk(cx, cz);
   const chunkAt = (x, z) => { const cx = Math.round(x / CH), cz = Math.round(z / CH); return inWorld(cx, cz) ? chunks.get(cx + ',' + cz) : null; };
   function dusty(x, z) {
@@ -1314,8 +1354,9 @@ h3 small { display: block; margin: 2px 0 0; }
   canvas.addEventListener('pointerup', pend); canvas.addEventListener('pointercancel', pend);
   canvas.addEventListener('wheel', e => { e.preventDefault(); D = clamp(D * (1 + e.deltaY * .0012), 6, 80); }, { passive: false });
   $('mute').addEventListener('click', () => { S.mute = !S.mute; audio(); muteUi(); saveSoon = true; });
+  $('gaucher').addEventListener('click', () => { S.gaucher = !S.gaucher; muteUi(); saveSoon = true; });
   $('zen').addEventListener('click', () => { S.zen = !S.zen; muteUi(); saveSoon = true; toast(S.zen ? 'Mode zen' : 'Mode normal'); });
-  function muteUi() { $('mutev').textContent = S.mute ? 'Coupé' : 'Activé'; $('mute').classList.toggle('on', !S.mute); $('zenv').textContent = S.zen ? 'Activé' : 'Désactivé'; $('zen').classList.toggle('on', S.zen); }
+  function muteUi() { $('mutev').textContent = S.mute ? 'Coupé' : 'Activé'; $('mute').classList.toggle('on', !S.mute); $('zenv').textContent = S.zen ? 'Activé' : 'Désactivé'; $('zen').classList.toggle('on', S.zen); $('gaucherv').textContent = S.gaucher ? 'Activé' : 'Désactivé'; $('gaucher').classList.toggle('on', !!S.gaucher); document.body.classList.toggle('gaucher', !!S.gaucher); }
   const toolsEl = $('tools'), menuEl = $('menu');
   menuEl.addEventListener('click', e => { e.stopPropagation(); audio(); const o = toolsEl.classList.toggle('open'); menuEl.setAttribute('aria-expanded', o); });
   toolsEl.addEventListener('click', () => { toolsEl.classList.remove('open'); menuEl.setAttribute('aria-expanded', false); });
@@ -1613,10 +1654,12 @@ h3 small { display: block; margin: 2px 0 0; }
   function save() {
     if (resetting) return;
     S.px = player.position.x; S.pz = player.position.z; S.ry = player.rotation.y; S.zoom = D; S.seen = Date.now();
-    try {
-      localStorage.setItem(KEY, JSON.stringify(S));
-      for (const c of chunks.values()) if (c.sv) { localStorage.setItem(KEY + ':' + c.k, JSON.stringify({ b: pack(c.h), g: c.got, d: c.done ? 1 : 0 })); c.sv = 0; }
-    } catch (e) { if (!once.saveErr) { once.saveErr = 1; toast('Sauvegarde impossible : espace plein ?', 'bad'); } }
+    // secteurs d'abord (chacun indépendamment), puis l'état ; IndexedDB reçoit une copie de chaque secteur
+    let fail = false; const list = [];
+    for (const c of chunks.values()) if (c.sv) { const r = rec(c); list.push([c.k, r]); try { localStorage.setItem(KEY + ':' + c.k, JSON.stringify(r)); } catch (e) { fail = true; } c.sv = 0; }
+    idbPut(list);
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { fail = true; }
+    if (fail && !once.saveErr) { once.saveErr = 1; toast('Stockage du navigateur plein : copie de secours utilisée', 'bad'); }
   }
   addEventListener('pagehide', save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
