@@ -1,0 +1,18 @@
+# Cloudflare Pages : en-têtes HTTP
+# La page et le service worker ne sont jamais mis en cache par le navigateur (mises à jour immédiates) ;
+# le reste (icônes, extensions) est versionné par le service worker.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/story.js
+  Cache-Control: no-cache
+/features/*
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

@@ -2,7 +2,7 @@
 // persistance iOS et feuille d'aide. Tout passe par l'API window.MS, index.html n'est pas touché.
 (() => {
   const { S, $, toast, sheet, drawMap, sectorsAll, FINDS, BADGES, chunks, fmt } = MS;
-  const KEY = 'moonsweeper7', LINK = 'https://romankimes-dot.github.io/Moon/';
+  const KEY = 'moonsweeper7', LINK = location.origin + location.pathname.replace(/index\.html$/, '');   // l'adresse où le jeu est servi (Cloudflare ou GitHub)
   const st = document.createElement('style');
   st.textContent = `
 .meta-sec { display: grid; gap: 8px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.04); }
