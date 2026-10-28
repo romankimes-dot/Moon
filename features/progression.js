@@ -99,7 +99,7 @@
     for (const q of S.quests.list) {
       if (q.done) continue; const d = DEF[q.id]; if (!d) continue;
       if (d.ev === 'dist') { q.p = Math.min(d.n, Math.floor((S.stats.dist || 0) - q.d0)); if (q.p >= d.n) finish(q, d); }
-      else if (d.ev === 'combo' && comboEl.classList.contains('on') && parseFloat(comboEl.textContent.slice(8).replace(',', '.')) >= 2) finish(q, d);
+      else if (d.ev === 'combo' && comboEl.classList.contains('on') && (S.stats.combo || 0) >= 2) finish(q, d);
     }
   }
   rollover();
