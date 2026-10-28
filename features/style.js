@@ -221,8 +221,14 @@
     return a.g;
   };
   const price = it => it.price ? it.price + ' ⭐' : 'Offert';
-  let thumbQ = [];
-  function pump() { const el = thumbQ.shift(); if (!el) return; el.src = thumb(el.dataset.sth, el._build) || ''; el._build = null; setTimeout(pump, 0); }
+  // vignettes : cache local (affichage immédiat après un nouveau rendu), une seule file, images détachées ignorées
+  const TH = new Map(); let thumbQ = [], pumping = false;
+  function queue(img, build) { const k = img.dataset.sth; if (TH.has(k)) { img.src = TH.get(k); return; } img._build = build; thumbQ.push(img); }
+  function pump() {
+    thumbQ = thumbQ.filter(e => e.isConnected); const el = thumbQ.shift(); pumping = !!el; if (!el) return;
+    const k = el.dataset.sth, url = TH.get(k) || thumb(k, el._build) || ''; TH.set(k, url); el.src = url; el._build = null; setTimeout(pump, 0);
+  }
+  const kick = () => { if (!pumping) pump(); };
   function wardUi() {
     wardH.textContent = `cosmétiques · ${S.tokens || 0} ⭐ en poche`;
     let html = '', cat = '';
@@ -235,8 +241,8 @@
       html += `<button class="witem${cur ? ' cur' : own ? ' owned' : ''}${lock ? ' locked' : ''}" type="button" data-w="${it.id}"${dis ? ' disabled' : ''}><img class="th" data-sth="style:${it.id}" alt=""><span class="n">${it.name}</span><span class="p">${label}${sub ? '<small>' + sub + '</small>' : ''}</span><span class="d">${it.desc}</span></button>`;
     }
     ward.innerHTML = html;
-    for (const img of ward.querySelectorAll('img[data-sth]')) { img._build = preview(WARD.find(it => 'style:' + it.id === img.dataset.sth)); thumbQ.push(img); }
-    pump();
+    for (const img of ward.querySelectorAll('img[data-sth]')) queue(img, preview(WARD.find(it => 'style:' + it.id === img.dataset.sth)));
+    kick();
   }
   const dots = n => '●'.repeat(n) + '○'.repeat(3 - n);
   const num = v => String(v).replace('.', ',');
@@ -253,7 +259,7 @@
     const label = S.trailer ? (S.trailerOn ? 'Attelée' : 'Dételée') : lock ? 'Chapitre 3' : '$' + fmt(8000);
     html += `<button class="witem${S.trailer ? ' cur' : ''}${lock ? ' locked' : ''}" type="button" data-tr="1"${lock || no ? ' disabled' : ''}><img class="th" data-sth="style:trailer" alt=""><span class="n">Remorque</span><span class="p${S.trailer ? '' : ' m'}">${label}${no && !lock ? '<small>il manque $' + fmt(8000 - S.money) + '</small>' : ''}</span><span class="d">+50 % de contenance du sac, −10 % de vitesse en engin. ${S.trailer ? 'Toucher pour atteler ou dételer.' : 'Elle te suit partout.'}</span></button>`;
     atel.innerHTML = html;
-    const img = atel.querySelector('img[data-sth]'); img._build = () => { const m = trailerModel(); m.g.rotation.y = .6; return m.g; }; thumbQ.push(img); pump();
+    const img = atel.querySelector('img[data-sth]'); queue(img, () => { const m = trailerModel(); m.g.rotation.y = .6; return m.g; }); kick();
   }
   const ask = b => { if (b.dataset.sure) return false; b.dataset.sure = 1; const p = b.querySelector('.p'); p.dataset.old = p.innerHTML; p.textContent = 'Acheter ?'; b.classList.add('ask'); setTimeout(() => { if (b.dataset.sure) { delete b.dataset.sure; p.innerHTML = p.dataset.old; b.classList.remove('ask'); } }, 2500); return true; };
   ward.addEventListener('click', e => {
