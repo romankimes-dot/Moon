@@ -37,7 +37,7 @@
   // ===== Sites historiques (anecdotes vérifiées) =====
   const SITES = [
     { id: 'a11', x: 28, z: 35, name: 'Apollo 11', when: 'Mer de la Tranquillité · 20 juillet 1969', l2: '20 juillet 1969', prints: 36,
-      txt: 'Le 20 juillet 1969, Neil Armstrong et Buzz Aldrin ont passé environ deux heures et demie hors du module Eagle, premiers humains à marcher sur la Lune. Sans vent ni pluie, leurs empreintes sont toujours intactes aujourd’hui.',
+      txt: 'Le 20 juillet 1969, Neil Armstrong et Buzz Aldrin ont passé environ deux heures et demie hors du module Eagle, premiers humains à marcher sur la Lune. Sans vent ni pluie pour les effacer, leurs empreintes peuvent y rester des millions d’années.',
       build(g) {   // sismomètre passif (PSEP) laissé sur place, avec ses deux panneaux solaires
         put(g, box(.5, .26, .5), MAT.white, 0, .13, 0); put(g, cyl(.02, .02, .8, 6), MAT.steel, 0, .6, 0);
         for (const s of [-1, 1]) put(g, box(.62, .02, .5), MAT.navy, s * .62, .3, 0).rotation.z = -s * .35;
@@ -52,7 +52,7 @@
         OBST.push({ x: this.x, z: this.z, r: 1.2 });
       } },
     { id: 'a15', x: 77, z: -45, name: 'Apollo 15', when: 'Hadley-Apennins · 2 août 1971', l2: 'Marteau et plume · 1971', prints: 10,
-      txt: 'Le 2 août 1971, Dave Scott a lâché en même temps un marteau et une plume de faucon devant la caméra : sans air, les deux ont touché le sol ensemble, comme Galilée l’avait prédit. Ils sont restés là.',
+      txt: 'Le 2 août 1971, Dave Scott a lâché en même temps un marteau et une plume de faucon devant la caméra. Sans air pour freiner la plume, les deux ont touché le sol en même temps, comme Galilée l’avait prédit.',
       build(g) {   // le marteau et la plume, au sol
         put(g, cyl(.022, .022, .4, 8), MAT.orange, -.3, .03, .2).rotation.set(1.571, 0, .4); put(g, box(.13, .07, .06), MAT.steel, -.46, .04, .36);
         put(g, box(.05, .006, .24), MAT.white, .3, .01, .1).rotation.y = .6; put(g, cyl(.005, .005, .28, 5), MAT.dark, .3, .012, .1).rotation.set(1.571, 0, .6);
