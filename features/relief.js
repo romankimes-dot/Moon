@@ -145,15 +145,15 @@
     if (Math.max(Math.abs(c.x), Math.abs(c.z)) > 141 - c.R || Math.min(Math.abs(c.x), Math.abs(c.z)) < c.R + 6 || BIG.some(b => Math.hypot(b.x - c.x, b.z - c.z) < b.R + c.R + 4)) continue;
     BIG.push(c); if (BIG.length === 10) break;
   }
-  let glints = null; const ringMat = LIT(0xff8a2a, 1.6);
+  let glints = null; const ringMat = LIT(0xff8a2a, 1.6); ringMat.side = THREE.DoubleSide;
   function buildCraters() {
     glints = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.55, 0), LIT(0xffe08a, 3), BIG.length); glints.frustumCulled = false;
     BIG.forEach((c, i) => {
       c.y = H(c.x, c.z) + .7; c.mult = RINGS[Math.min(4, ring(c.x, c.z))].mult;
-      // anneau orange au bord, ruban qui épouse le relief
-      const pos = [], idx = [], N = 64;
-      for (let k = 0; k <= N; k++) { const a = k / N * 6.283, ca = Math.cos(a), sa = Math.sin(a);
-        for (const rr of [c.R * .98, c.R * 1.04]) { const x = c.x + ca * rr, z = c.z + sa * rr; pos.push(x, H(x, z) + .12, z); }
+      // anneau orange au bord : bande verticale de 45 cm qui suit le relief (un ruban plat passerait sous le maillage du sol)
+      const pos = [], idx = [], N = 72;
+      for (let k = 0; k <= N; k++) { const a = k / N * 6.283, x = c.x + Math.cos(a) * c.R, z = c.z + Math.sin(a) * c.R, y = H(x, z);
+        pos.push(x, y - .1, z, x, y + .45, z);
         if (k) { const b = k * 2; idx.push(b - 2, b - 1, b, b - 1, b + 1, b); } }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
       c.ring = new THREE.Mesh(g, ringMat); c.ring.visible = !S.craters[i]; scene.add(c.ring); glints.setMatrixAt(i, ZERO);

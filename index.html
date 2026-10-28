@@ -106,7 +106,13 @@ button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent
   transition: transform .08s, box-shadow .08s; pointer-events: auto;
 }
 .round.small { width: 40px; height: 40px; }
-.tools { display: flex; gap: 8px; }
+.col.right { position: relative; }
+#menu svg { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+#tools { display: none; position: absolute; top: calc(100% + 6px); right: 0; width: 172px; max-width: none; box-sizing: border-box; grid-template-columns: repeat(3, 44px); gap: 10px; padding: 10px; border-radius: 14px; pointer-events: auto; }
+#tools.open { display: grid; justify-content: space-between; }
+.hud { z-index: 4; }
+.tools .round.small { width: 44px; height: 44px; }
+.tools .round.small { width: 40px; height: 40px; }
 .tools svg { fill: currentColor; stroke: none; }
 #settings svg { fill: none; stroke: currentColor; }
 .round.small svg { width: 18px; height: 18px; }
@@ -265,7 +271,8 @@ h3 small { display: block; margin: 2px 0 0; }
   <div class="col right">
     <canvas id="mini" width="176" height="176" class="glass" aria-label="Carte de la Lune, toucher pour agrandir"></canvas>
     <div class="glass signal" id="signal"><span class="label">Détecteur</span><div class="bars"><i></i><i></i><i></i><i></i><i></i></div></div>
-    <div class="tools"><button class="round small" id="openbadges" type="button" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></button>
+    <button class="round small" id="menu" type="button" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div class="tools glass" id="tools"><button class="round small" id="openbadges" type="button" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></button>
     <button class="round small" id="settings" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
   </div>
 </div>
@@ -1300,6 +1307,10 @@ h3 small { display: block; margin: 2px 0 0; }
   $('mute').addEventListener('click', () => { S.mute = !S.mute; audio(); muteUi(); saveSoon = true; });
   $('zen').addEventListener('click', () => { S.zen = !S.zen; muteUi(); saveSoon = true; toast(S.zen ? 'Mode zen' : 'Mode normal'); });
   function muteUi() { $('mutev').textContent = S.mute ? 'Coupé' : 'Activé'; $('mute').classList.toggle('on', !S.mute); $('zenv').textContent = S.zen ? 'Activé' : 'Désactivé'; $('zen').classList.toggle('on', S.zen); }
+  const toolsEl = $('tools'), menuEl = $('menu');
+  menuEl.addEventListener('click', e => { e.stopPropagation(); audio(); const o = toolsEl.classList.toggle('open'); menuEl.setAttribute('aria-expanded', o); });
+  toolsEl.addEventListener('click', () => { toolsEl.classList.remove('open'); menuEl.setAttribute('aria-expanded', false); });
+  canvas.addEventListener('pointerdown', () => toolsEl.classList.remove('open'));
   $('openbadges').addEventListener('click', () => { audio(); badgesUi(); $('badgesheet').hidden = false; });
   $('settings').addEventListener('click', () => { audio(); $('aboutboss').textContent = ST.boss.name; $('abouttxt').textContent = ST.boss.title || ''; $('settings-sheet').hidden = false; });
   document.addEventListener('click', e => { const b = e.target.closest('[data-close]'); if (b) b.closest('.sheet').hidden = true; });
@@ -1853,7 +1864,13 @@ h3 small { display: block; margin: 2px 0 0; }
   requestAnimationFrame(frame);
 })();
 </script>
+<script src="features/feel.js" defer></script>
+<script src="features/histoire.js" defer></script>
 <script src="features/meta.js" defer></script>
+<script src="features/monde.js" defer></script>
+<script src="features/progression.js" defer></script>
+<script src="features/relief.js" defer></script>
+<script src="features/style.js" defer></script>
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
 </body>
 </html>
