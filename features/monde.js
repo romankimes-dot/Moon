@@ -44,9 +44,9 @@
     // la nuit, c'est la Terre qui éclaire : la lumière directionnelle glisse vers elle, en bleu doux
     DIR.copy(SOL).setY(Math.max(SOL.y, .08)).lerp(TERRE, 1 - jour).normalize();
     sun.position.copy(sun.target.position).addScaledVector(DIR, 90);
-    sun.intensity = (1.15 * jour + .32 * (1 - jour)) * ecl;
+    sun.intensity = (1.15 * jour + .22 * (1 - jour)) * ecl;
     sun.color.copy(SUN_J).lerp(SUN_C, crep * .85).lerp(SUN_N, 1 - jour);
-    hemi.intensity = (.4 + .38 * (1 - jour)) * (.45 + .55 * ecl);
+    hemi.intensity = (.4 + .14 * (1 - jour)) * (.45 + .55 * ecl);
     hemi.color.copy(HE_J).lerp(HE_N, 1 - jour); hemi.groundColor.copy(HG_J).lerp(HG_N, 1 - jour);
     rim.intensity = .45 + .3 * (1 - jour);
     scene.fog.color.copy(FOG_J).lerp(FOG_C, crep * .5).lerp(FOG_N, 1 - jour).multiplyScalar(.35 + .65 * ecl);
@@ -217,7 +217,7 @@
   // --- chat astronaute : assis sur la plateforme, se lève et miaule quand on passe ---
   const chat = new THREE.Group(); chat.position.set(2.7, .25, 2.5); chat.rotation.y = -2.2; scene.add(chat);
   const corps = new THREE.Group(), tete = new THREE.Group(), queue = new THREE.Group(); chat.add(corps, tete, queue);
-  { const roux = M(0xd58a3c, { roughness: .9 }), clair = M(0xf4d7b0, { roughness: .9 }), noir = M(0x101014), verre = P(0xbfe4ff, { transparent: true, opacity: .3, roughness: .05, clearcoat: 1 });
+  { const roux = M(0xc4601a, { roughness: .9, envMapIntensity: .4 }), clair = M(0xf0d0a8, { roughness: .9, envMapIntensity: .4 }), noir = M(0x101014), verre = P(0xbfe4ff, { transparent: true, opacity: .3, roughness: .05, clearcoat: 1 });
     put(corps, sph(.22, 20, 14), roux, 0, .22, 0).scale.set(1, .85, 1.35); put(corps, sph(.14, 14, 10), clair, 0, .14, .22);
     for (const s of [-1, 1]) put(corps, box(.09, .08, .14), roux, s * .1, .05, .25);
     tete.position.set(0, .5, .2);
@@ -252,7 +252,7 @@
     if (nom === 'eclipseTot') EV.t = EV.dur / 2;
     if (nom === 'pluieTout') { while (PL.i < PL.n) { PL.next = 0; pluie(0); } for (const e of ECL) if (e.on) e.t = 1.7; }
     if (nom === 'fin') { if (EV.nom) finEv(); }
-    if (nom === 'taupe') { taupeSpawn(); TP.t = .6; }
+    if (nom === 'taupe') { taupeSpawn(); TP.t = .6; MS.cam = () => { MS.camera.position.set(TP.x + 1.6, TP.y + 1.6, TP.z + 2.4); MS.camera.lookAt(TP.x, TP.y + .3, TP.z); }; }
     if (nom === 'chat') { player.position.set(chat.position.x + 1.2, 0, chat.position.z + .8); MS.cam = (cp) => { MS.camera.position.set(chat.position.x - 1.5, 2.2, chat.position.z + 3); MS.camera.lookAt(chat.position.x, .5, chat.position.z); }; }
     if (nom === 'ciel') MS.cam = (cp, cl) => { MS.camera.position.copy(cp); MS.camera.position.y += 1; MS.camera.lookAt(cp.x + SOL.x * 50, cp.y + SOL.y * 50, cp.z + SOL.z * 50); };
     if (nom === 'sol') MS.cam = null;

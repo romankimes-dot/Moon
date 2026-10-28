@@ -1,7 +1,8 @@
 // Progression : contrats du jour, pépites rares + album, vent solaire, prestige « Nouvelle Lune », défi du secteur parfait.
 // Tout passe par window.MS (voir features/README.md) ; ce fichier ne touche pas au jeu.
 (() => {
-  const MS = window.MS; if (!MS) return;
+  const MS = window.MS; if (!MS || MS.progression) return;              // une seule fois, même si la balise est en double
+  MS.progression = true;
   const { S, on, toast, pop, say, sheet, button, chip, modal, addTokens, fmt, RINGS, CH, CELLS, chunks, chunkAt, redirty, markSave, checkBadges, glowFx, player, H, $ } = MS;
   const KEY = 'moonsweeper7', boss = () => (MS.ST.boss && (MS.ST.boss.callsign || MS.ST.boss.name)) || 'Base';
   const rnd = n => Math.floor(Math.random() * n);
@@ -188,7 +189,7 @@
     const bonus = Math.round(CH * CH * RINGS[c.ring].mult * .4);
     S.money += bonus; S.perfect++; markSave();
     toast('Secteur parfait · bonus doublé', 'gold');
-    setTimeout(() => pop('Sans lever le doigt ! +$' + fmt(bonus), 'gold'), 450);
+    setTimeout(() => pop('Parfait ! +$' + fmt(bonus), 'gold'), 450);
     checkBadges();
   });
   if (S.prestige) tint();
